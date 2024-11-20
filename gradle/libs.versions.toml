@@ -1,5 +1,8 @@
 [versions]
 agp = "8.6.0"
+cameraCamera2Version = "1.1.0"
+cameraLifecycleVersion = "1.1.0"
+cameraViewVersion = "1.0.0"
 kotlin = "1.9.0"
 coreKtx = "1.10.1"
 junit = "4.13.2"
@@ -8,8 +11,17 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2024.04.01"
+playServicesMlkitBarcodeScanning = "18.3.1"
+lifecycleViewmodelCompose = "2.8.2"
+barcodeScanning = "17.2.0"
+cameraCamera2 = "1.4.0-beta02"
+cameraLifecycle = "1.4.0-beta02"
+cameraView = "1.4.0-beta02"
 
 [libraries]
+androidx-camera-camera2-v110 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2Version" }
+androidx-camera-lifecycle-v110 = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraLifecycleVersion" }
+androidx-camera-view-v100 = { module = "androidx.camera:camera-view", version.ref = "cameraViewVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -24,8 +36,17 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
+play-services-mlkit-barcode-scanning = { group = "com.google.android.gms", name = "play-services-mlkit-barcode-scanning", version.ref = "playServicesMlkitBarcodeScanning" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraLifecycle" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "cameraCamera2" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "barcodeScanning" }
+
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+
 
