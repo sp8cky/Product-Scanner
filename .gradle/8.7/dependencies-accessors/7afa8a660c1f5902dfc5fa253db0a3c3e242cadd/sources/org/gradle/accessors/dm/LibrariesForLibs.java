@@ -23,6 +23,8 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
 
     private final AbstractExternalDependencyFactory owner = this;
     private final AndroidxLibraryAccessors laccForAndroidxLibraryAccessors = new AndroidxLibraryAccessors(owner);
+    private final BarcodeLibraryAccessors laccForBarcodeLibraryAccessors = new BarcodeLibraryAccessors(owner);
+    private final PlayLibraryAccessors laccForPlayLibraryAccessors = new PlayLibraryAccessors(owner);
     private final VersionAccessors vaccForVersionAccessors = new VersionAccessors(providers, config);
     private final BundleAccessors baccForBundleAccessors = new BundleAccessors(objects, providers, config, attributesFactory, capabilityNotationParser);
     private final PluginAccessors paccForPluginAccessors = new PluginAccessors(providers, config);
@@ -50,6 +52,20 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
     }
 
     /**
+     * Group of libraries at <b>barcode</b>
+     */
+    public BarcodeLibraryAccessors getBarcode() {
+        return laccForBarcodeLibraryAccessors;
+    }
+
+    /**
+     * Group of libraries at <b>play</b>
+     */
+    public PlayLibraryAccessors getPlay() {
+        return laccForPlayLibraryAccessors;
+    }
+
+    /**
      * Group of versions at <b>versions</b>
      */
     public VersionAccessors getVersions() {
@@ -72,6 +88,7 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
 
     public static class AndroidxLibraryAccessors extends SubDependencyFactory {
         private final AndroidxActivityLibraryAccessors laccForAndroidxActivityLibraryAccessors = new AndroidxActivityLibraryAccessors(owner);
+        private final AndroidxCameraLibraryAccessors laccForAndroidxCameraLibraryAccessors = new AndroidxCameraLibraryAccessors(owner);
         private final AndroidxComposeLibraryAccessors laccForAndroidxComposeLibraryAccessors = new AndroidxComposeLibraryAccessors(owner);
         private final AndroidxCoreLibraryAccessors laccForAndroidxCoreLibraryAccessors = new AndroidxCoreLibraryAccessors(owner);
         private final AndroidxEspressoLibraryAccessors laccForAndroidxEspressoLibraryAccessors = new AndroidxEspressoLibraryAccessors(owner);
@@ -105,6 +122,13 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
          */
         public AndroidxActivityLibraryAccessors getActivity() {
             return laccForAndroidxActivityLibraryAccessors;
+        }
+
+        /**
+         * Group of libraries at <b>androidx.camera</b>
+         */
+        public AndroidxCameraLibraryAccessors getCamera() {
+            return laccForAndroidxCameraLibraryAccessors;
         }
 
         /**
@@ -160,6 +184,114 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
 
     }
 
+    public static class AndroidxCameraLibraryAccessors extends SubDependencyFactory {
+        private final AndroidxCameraCamera2LibraryAccessors laccForAndroidxCameraCamera2LibraryAccessors = new AndroidxCameraCamera2LibraryAccessors(owner);
+        private final AndroidxCameraLifecycleLibraryAccessors laccForAndroidxCameraLifecycleLibraryAccessors = new AndroidxCameraLifecycleLibraryAccessors(owner);
+        private final AndroidxCameraViewLibraryAccessors laccForAndroidxCameraViewLibraryAccessors = new AndroidxCameraViewLibraryAccessors(owner);
+
+        public AndroidxCameraLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Group of libraries at <b>androidx.camera.camera2</b>
+         */
+        public AndroidxCameraCamera2LibraryAccessors getCamera2() {
+            return laccForAndroidxCameraCamera2LibraryAccessors;
+        }
+
+        /**
+         * Group of libraries at <b>androidx.camera.lifecycle</b>
+         */
+        public AndroidxCameraLifecycleLibraryAccessors getLifecycle() {
+            return laccForAndroidxCameraLifecycleLibraryAccessors;
+        }
+
+        /**
+         * Group of libraries at <b>androidx.camera.view</b>
+         */
+        public AndroidxCameraViewLibraryAccessors getView() {
+            return laccForAndroidxCameraViewLibraryAccessors;
+        }
+
+    }
+
+    public static class AndroidxCameraCamera2LibraryAccessors extends SubDependencyFactory implements DependencyNotationSupplier {
+
+        public AndroidxCameraCamera2LibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Dependency provider for <b>camera2</b> with <b>androidx.camera:camera-camera2</b> coordinates and
+         * with version reference <b>cameraCamera2</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> asProvider() {
+            return create("androidx.camera.camera2");
+        }
+
+        /**
+         * Dependency provider for <b>v110</b> with <b>androidx.camera:camera-camera2</b> coordinates and
+         * with version reference <b>cameraCamera2Version</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> getV110() {
+            return create("androidx.camera.camera2.v110");
+        }
+
+    }
+
+    public static class AndroidxCameraLifecycleLibraryAccessors extends SubDependencyFactory implements DependencyNotationSupplier {
+
+        public AndroidxCameraLifecycleLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Dependency provider for <b>lifecycle</b> with <b>androidx.camera:camera-lifecycle</b> coordinates and
+         * with version reference <b>cameraLifecycle</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> asProvider() {
+            return create("androidx.camera.lifecycle");
+        }
+
+        /**
+         * Dependency provider for <b>v110</b> with <b>androidx.camera:camera-lifecycle</b> coordinates and
+         * with version reference <b>cameraLifecycleVersion</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> getV110() {
+            return create("androidx.camera.lifecycle.v110");
+        }
+
+    }
+
+    public static class AndroidxCameraViewLibraryAccessors extends SubDependencyFactory implements DependencyNotationSupplier {
+
+        public AndroidxCameraViewLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Dependency provider for <b>view</b> with <b>androidx.camera:camera-view</b> coordinates and
+         * with version reference <b>cameraView</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> asProvider() {
+            return create("androidx.camera.view");
+        }
+
+        /**
+         * Dependency provider for <b>v100</b> with <b>androidx.camera:camera-view</b> coordinates and
+         * with version reference <b>cameraViewVersion</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> getV100() {
+            return create("androidx.camera.view.v100");
+        }
+
+    }
+
     public static class AndroidxComposeLibraryAccessors extends SubDependencyFactory {
 
         public AndroidxComposeLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
@@ -210,6 +342,7 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
 
     public static class AndroidxLifecycleLibraryAccessors extends SubDependencyFactory {
         private final AndroidxLifecycleRuntimeLibraryAccessors laccForAndroidxLifecycleRuntimeLibraryAccessors = new AndroidxLifecycleRuntimeLibraryAccessors(owner);
+        private final AndroidxLifecycleViewmodelLibraryAccessors laccForAndroidxLifecycleViewmodelLibraryAccessors = new AndroidxLifecycleViewmodelLibraryAccessors(owner);
 
         public AndroidxLifecycleLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
 
@@ -218,6 +351,13 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
          */
         public AndroidxLifecycleRuntimeLibraryAccessors getRuntime() {
             return laccForAndroidxLifecycleRuntimeLibraryAccessors;
+        }
+
+        /**
+         * Group of libraries at <b>androidx.lifecycle.viewmodel</b>
+         */
+        public AndroidxLifecycleViewmodelLibraryAccessors getViewmodel() {
+            return laccForAndroidxLifecycleViewmodelLibraryAccessors;
         }
 
     }
@@ -234,6 +374,22 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
          */
         public Provider<MinimalExternalModuleDependency> getKtx() {
             return create("androidx.lifecycle.runtime.ktx");
+        }
+
+    }
+
+    public static class AndroidxLifecycleViewmodelLibraryAccessors extends SubDependencyFactory {
+
+        public AndroidxLifecycleViewmodelLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Dependency provider for <b>compose</b> with <b>androidx.lifecycle:lifecycle-viewmodel-compose</b> coordinates and
+         * with version reference <b>lifecycleViewmodelCompose</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> getCompose() {
+            return create("androidx.lifecycle.viewmodel.compose");
         }
 
     }
@@ -332,6 +488,80 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
 
     }
 
+    public static class BarcodeLibraryAccessors extends SubDependencyFactory {
+
+        public BarcodeLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Dependency provider for <b>scanning</b> with <b>com.google.mlkit:barcode-scanning</b> coordinates and
+         * with version reference <b>barcodeScanning</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> getScanning() {
+            return create("barcode.scanning");
+        }
+
+    }
+
+    public static class PlayLibraryAccessors extends SubDependencyFactory {
+        private final PlayServicesLibraryAccessors laccForPlayServicesLibraryAccessors = new PlayServicesLibraryAccessors(owner);
+
+        public PlayLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Group of libraries at <b>play.services</b>
+         */
+        public PlayServicesLibraryAccessors getServices() {
+            return laccForPlayServicesLibraryAccessors;
+        }
+
+    }
+
+    public static class PlayServicesLibraryAccessors extends SubDependencyFactory {
+        private final PlayServicesMlkitLibraryAccessors laccForPlayServicesMlkitLibraryAccessors = new PlayServicesMlkitLibraryAccessors(owner);
+
+        public PlayServicesLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Group of libraries at <b>play.services.mlkit</b>
+         */
+        public PlayServicesMlkitLibraryAccessors getMlkit() {
+            return laccForPlayServicesMlkitLibraryAccessors;
+        }
+
+    }
+
+    public static class PlayServicesMlkitLibraryAccessors extends SubDependencyFactory {
+        private final PlayServicesMlkitBarcodeLibraryAccessors laccForPlayServicesMlkitBarcodeLibraryAccessors = new PlayServicesMlkitBarcodeLibraryAccessors(owner);
+
+        public PlayServicesMlkitLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Group of libraries at <b>play.services.mlkit.barcode</b>
+         */
+        public PlayServicesMlkitBarcodeLibraryAccessors getBarcode() {
+            return laccForPlayServicesMlkitBarcodeLibraryAccessors;
+        }
+
+    }
+
+    public static class PlayServicesMlkitBarcodeLibraryAccessors extends SubDependencyFactory {
+
+        public PlayServicesMlkitBarcodeLibraryAccessors(AbstractExternalDependencyFactory owner) { super(owner); }
+
+        /**
+         * Dependency provider for <b>scanning</b> with <b>com.google.android.gms:play-services-mlkit-barcode-scanning</b> coordinates and
+         * with version reference <b>playServicesMlkitBarcodeScanning</b>
+         * <p>
+         * This dependency was declared in catalog libs.versions.toml
+         */
+        public Provider<MinimalExternalModuleDependency> getScanning() {
+            return create("play.services.mlkit.barcode.scanning");
+        }
+
+    }
+
     public static class VersionAccessors extends VersionFactory  {
 
         public VersionAccessors(ProviderFactory providers, DefaultVersionCatalog config) { super(providers, config); }
@@ -355,6 +585,76 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
          * This version was declared in catalog libs.versions.toml
          */
         public Provider<String> getAgp() { return getVersion("agp"); }
+
+        /**
+         * Version alias <b>barcodeScanning</b> with value <b>17.2.0</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getBarcodeScanning() { return getVersion("barcodeScanning"); }
+
+        /**
+         * Version alias <b>cameraCamera2</b> with value <b>1.3.0</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getCameraCamera2() { return getVersion("cameraCamera2"); }
+
+        /**
+         * Version alias <b>cameraCamera2Version</b> with value <b>1.1.0</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getCameraCamera2Version() { return getVersion("cameraCamera2Version"); }
+
+        /**
+         * Version alias <b>cameraLifecycle</b> with value <b>1.3.0</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getCameraLifecycle() { return getVersion("cameraLifecycle"); }
+
+        /**
+         * Version alias <b>cameraLifecycleVersion</b> with value <b>1.1.0</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getCameraLifecycleVersion() { return getVersion("cameraLifecycleVersion"); }
+
+        /**
+         * Version alias <b>cameraView</b> with value <b>1.3.0</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getCameraView() { return getVersion("cameraView"); }
+
+        /**
+         * Version alias <b>cameraViewVersion</b> with value <b>1.0.0</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getCameraViewVersion() { return getVersion("cameraViewVersion"); }
 
         /**
          * Version alias <b>composeBom</b> with value <b>2024.04.01</b>
@@ -426,6 +726,26 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
          */
         public Provider<String> getLifecycleRuntimeKtx() { return getVersion("lifecycleRuntimeKtx"); }
 
+        /**
+         * Version alias <b>lifecycleViewmodelCompose</b> with value <b>2.8.2</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getLifecycleViewmodelCompose() { return getVersion("lifecycleViewmodelCompose"); }
+
+        /**
+         * Version alias <b>playServicesMlkitBarcodeScanning</b> with value <b>18.3.1</b>
+         * <p>
+         * If the version is a rich version and cannot be represented as a
+         * single version string, an empty string is returned.
+         * <p>
+         * This version was declared in catalog libs.versions.toml
+         */
+        public Provider<String> getPlayServicesMlkitBarcodeScanning() { return getVersion("playServicesMlkitBarcodeScanning"); }
+
     }
 
     public static class BundleAccessors extends BundleFactory {
@@ -436,7 +756,7 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
 
     public static class PluginAccessors extends PluginFactory {
         private final AndroidPluginAccessors paccForAndroidPluginAccessors = new AndroidPluginAccessors(providers, config);
-        private final KotlinPluginAccessors paccForKotlinPluginAccessors = new KotlinPluginAccessors(providers, config);
+        private final JetbrainsPluginAccessors paccForJetbrainsPluginAccessors = new JetbrainsPluginAccessors(providers, config);
 
         public PluginAccessors(ProviderFactory providers, DefaultVersionCatalog config) { super(providers, config); }
 
@@ -448,10 +768,10 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
         }
 
         /**
-         * Group of plugins at <b>plugins.kotlin</b>
+         * Group of plugins at <b>plugins.jetbrains</b>
          */
-        public KotlinPluginAccessors getKotlin() {
-            return paccForKotlinPluginAccessors;
+        public JetbrainsPluginAccessors getJetbrains() {
+            return paccForJetbrainsPluginAccessors;
         }
 
     }
@@ -470,17 +790,31 @@ public class LibrariesForLibs extends AbstractExternalDependencyFactory {
 
     }
 
-    public static class KotlinPluginAccessors extends PluginFactory {
+    public static class JetbrainsPluginAccessors extends PluginFactory {
+        private final JetbrainsKotlinPluginAccessors paccForJetbrainsKotlinPluginAccessors = new JetbrainsKotlinPluginAccessors(providers, config);
 
-        public KotlinPluginAccessors(ProviderFactory providers, DefaultVersionCatalog config) { super(providers, config); }
+        public JetbrainsPluginAccessors(ProviderFactory providers, DefaultVersionCatalog config) { super(providers, config); }
 
         /**
-         * Plugin provider for <b>kotlin.android</b> with plugin id <b>org.jetbrains.kotlin.android</b> and
+         * Group of plugins at <b>plugins.jetbrains.kotlin</b>
+         */
+        public JetbrainsKotlinPluginAccessors getKotlin() {
+            return paccForJetbrainsKotlinPluginAccessors;
+        }
+
+    }
+
+    public static class JetbrainsKotlinPluginAccessors extends PluginFactory {
+
+        public JetbrainsKotlinPluginAccessors(ProviderFactory providers, DefaultVersionCatalog config) { super(providers, config); }
+
+        /**
+         * Plugin provider for <b>jetbrains.kotlin.android</b> with plugin id <b>org.jetbrains.kotlin.android</b> and
          * with version reference <b>kotlin</b>
          * <p>
          * This plugin was declared in catalog libs.versions.toml
          */
-        public Provider<PluginDependency> getAndroid() { return createPlugin("kotlin.android"); }
+        public Provider<PluginDependency> getAndroid() { return createPlugin("jetbrains.kotlin.android"); }
 
     }
 

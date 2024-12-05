@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.RectangleShape
 import de.luh.hci.mid.productscanner.ui.theme.ProductscannerTheme
+import de.luh.hci.mid.productscanner.ui.theme.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +67,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp), // Höhe explizit definiert
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+            colors = ButtonDefaults.buttonColors(containerColor = Blue80),
             shape = RectangleShape, // Ecken nicht abrunden
             elevation = ButtonDefaults.buttonElevation(0.dp) // Schatten entfernen
         ) {
@@ -91,7 +92,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .weight(1f) // Gleichmäßiges Ausfüllen
                     .height(150.dp), // Höhe direkt auf den Button angewendet
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                colors = ButtonDefaults.buttonColors(containerColor = Green40),
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
@@ -102,7 +103,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .weight(1f) // Gleichmäßiges Ausfüllen
                     .height(150.dp), // Höhe direkt auf den Button angewendet
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                colors = ButtonDefaults.buttonColors(containerColor = Green40),
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
@@ -123,7 +124,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .weight(1f) // Gleichmäßiges Ausfüllen
                     .height(150.dp), // Höhe direkt auf den Button angewendet
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                colors = ButtonDefaults.buttonColors(containerColor = Red40),
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
@@ -134,7 +135,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .weight(1f) // Gleichmäßiges Ausfüllen
                     .height(150.dp), // Höhe direkt auf den Button angewendet
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                colors = ButtonDefaults.buttonColors(containerColor = Red40),
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
@@ -156,7 +157,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .weight(1f) // Exakt gleiche Breite wie "Einstellungen"
                     .height(150.dp), // Exakt gleiche Höhe wie die anderen Buttons
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                colors = ButtonDefaults.buttonColors(containerColor = Blue40),
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
