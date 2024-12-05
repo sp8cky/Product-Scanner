@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.font.FontWeight
 import de.luh.hci.mid.productscanner.ui.theme.ProductscannerTheme
 import de.luh.hci.mid.productscanner.ui.theme.*
 
@@ -53,6 +54,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         Text(
             text = "HOME",
             fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
             color = Color.Black,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -96,7 +98,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
-                Text(text = "SCAN-VERLAUF", fontSize = 16.sp, color = Color.White)
+                Text(text = "SCAN\n VERLAUF",
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
             Button(
                 onClick = { /* Action for Einkaufsliste */ },
@@ -107,7 +114,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
-                Text(text = "EINKAUFSLISTE", fontSize = 16.sp, color = Color.White)
+                Text(text = "EINKAUFS\nLISTE",
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
 
@@ -128,7 +140,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
-                Text(text = "FILTER", fontSize = 16.sp, color = Color.White)
+                Text(text = "FILTER",
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
             Button(
                 onClick = { /* Action for Einstellungen */ },
@@ -139,7 +156,12 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 shape = RectangleShape,
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
-                Text(text = "EINSTELLUNGEN", fontSize = 16.sp, color = Color.White)
+                Text(text = "EINSTELL\nUNGEN",
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
 
@@ -163,7 +185,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             ) {
                 Text(
                     text = "🔊",
-                    fontSize = 24.sp,
+                    fontSize = 50.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
