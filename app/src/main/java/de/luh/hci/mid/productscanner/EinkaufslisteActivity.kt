@@ -83,6 +83,7 @@ class EinkaufslisteActivity : ComponentActivity() {
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
+
         ) {
             // Eintragsnummer
             Text(
@@ -146,16 +147,19 @@ class EinkaufslisteActivity : ComponentActivity() {
     @Composable
     fun BottomBar(
         onHomeClicked: () -> Unit,
-        onSpeakerClicked: () -> Unit
+        onSpeakerClicked: () -> Unit,
+        modifier: Modifier = Modifier // Modifier wird jetzt als Parameter übergeben
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp) // Padding rechts und links
         ) {
             // Untere Buttons (Kamera-Button)
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp) // horizontalArrangement für Row
             ) {
                 Button(
                     onClick = { /* Action for Kamera */ },
@@ -178,11 +182,11 @@ class EinkaufslisteActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Footer Row für Lautsprecher und zukünftige Buttons
+            // Footer Row für Lautsprecher und Home-Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp) // horizontalArrangement hier auch für Row
             ) {
                 Button(
                     onClick = { onHomeClicked() },
@@ -194,7 +198,7 @@ class EinkaufslisteActivity : ComponentActivity() {
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
                     Text(
-                        text = "\uD83C\uDFE0",
+                        text = "\uD83C\uDFE0", // Home Icon
                         fontSize = 24.sp,
                         color = Color.White,
                         textAlign = TextAlign.Center
@@ -210,7 +214,7 @@ class EinkaufslisteActivity : ComponentActivity() {
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
                     Text(
-                        text = "🔊",
+                        text = "🔊", // Lautsprecher Icon
                         fontSize = 24.sp,
                         color = Color.White,
                         textAlign = TextAlign.Center
