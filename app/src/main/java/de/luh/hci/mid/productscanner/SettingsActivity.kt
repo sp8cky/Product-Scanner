@@ -72,6 +72,59 @@ class SettingsActivity : ComponentActivity() {
                         SettingItem(label = "Toggle 1")
                         SettingItem(label = "Dark Mode")
                         SettingItem(label = "Toggle 3")
+
+                        // Voice Auswahl
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Voice",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+
+                            val selectedOption = remember { mutableStateOf("Option 1") }
+                            DropdownMenuButton(
+                                options = listOf(
+                                    "Option 1",
+                                    "Option 2",
+                                    "Option 3",
+                                    "Option 4",
+                                    "Option 5"
+                                ),
+                                selectedOption = selectedOption.value,
+                                onOptionSelected = { selectedOption.value = it }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Volume Slider
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Volume",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+
+                            val volumeLevel = remember { mutableStateOf(50f) }
+                            Slider(
+                                value = volumeLevel.value,
+                                onValueChange = { volumeLevel.value = it },
+                                valueRange = 0f..100f,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Blue40,
+                                    activeTrackColor = Blue40
+                                )
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -92,7 +145,7 @@ class SettingsActivity : ComponentActivity() {
                             elevation = ButtonDefaults.buttonElevation(0.dp)
                         ) {
                             Text(
-                                text = "\uD83C\uDFE0", // Home Icon
+                                text = "🏠", // Home Icon
                                 fontSize = 24.sp,
                                 color = Color.White,
                                 textAlign = TextAlign.Center
@@ -148,4 +201,38 @@ class SettingsActivity : ComponentActivity() {
             )
         }
     }
+
+    @Composable
+    fun DropdownMenuButton(
+        options: List<String>,
+        selectedOption: String,
+        onOptionSelected: (String) -> Unit
+    ) {
+        val expanded = remember { mutableStateOf(false) }
+
+        Box {
+            Button(
+                onClick = { expanded.value = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
+                shape = RectangleShape
+            ) {
+                Text(text = selectedOption, fontSize = 16.sp)
+            }
+            DropdownMenu(
+                expanded = expanded.value,
+                onDismissRequest = { expanded.value = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded.value = false
+                        },
+                        text = { Text(option, fontSize = 16.sp) }
+                    )
+                }
+            }
+        }
+    }
+
 }
