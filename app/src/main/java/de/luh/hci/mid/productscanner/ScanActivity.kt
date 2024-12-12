@@ -48,15 +48,15 @@ class ScanActivity : ComponentActivity() {
             CameraPreviewScreen(
                 onBarcodeScanned = { barcode ->
                     // Wenn der Barcode gescannt wurde, weiter zur InfoActivity
-                    //val intent = Intent(this, InfoActivity::class.java)
                     val intent = Intent(this, InfoActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     }
                     intent.putExtra("BARCODE_VALUE", barcode)
                     startActivity(intent)
                     finish()
-
-
+                },
+                onHomeClicked = {
+                    finish()
                 }
             )
         }
@@ -64,8 +64,11 @@ class ScanActivity : ComponentActivity() {
 
     @OptIn(ExperimentalGetImage::class)
     @Composable
-    fun CameraPreviewScreen(onBarcodeScanned: (String) -> Unit, modifier: Modifier = Modifier) {
-
+    fun CameraPreviewScreen(
+        onBarcodeScanned: (String) -> Unit,
+        onHomeClicked: () -> Unit, // onHomeClicked als Parameter
+        modifier: Modifier = Modifier
+    ) {
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -102,7 +105,6 @@ class ScanActivity : ComponentActivity() {
                     ) == PackageManager.PERMISSION_GRANTED -> {
                         hasCameraPermission = true
                     }
-
                     else -> {
                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
@@ -182,14 +184,14 @@ class ScanActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Footer Row für Lautsprecher und zukünftige Buttons
+            // Footer Row für Lautsprecher und Home-Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Button(
-                    onClick = { /* Action for HomeButton */ },
+                    onClick = { onHomeClicked() }, // Der Home-Button ruft onHomeClicked auf
                     modifier = Modifier
                         .weight(1f)
                         .height(60.dp),
