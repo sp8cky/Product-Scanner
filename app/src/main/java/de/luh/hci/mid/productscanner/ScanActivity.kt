@@ -156,14 +156,14 @@ class ScanActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Untere Buttons (Filter und Einstellungen)
+            // Untere Buttons (KameraButton)
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Button(
-                    onClick = { /* Action for Filter */ },
+                    onClick = { /* Action for Kamera */ },
                     modifier = Modifier
                         .weight(1f)
                         .height(60.dp), // Einheitliche Höhe der Buttons
@@ -172,24 +172,7 @@ class ScanActivity : ComponentActivity() {
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
                     Text(
-                        text = "FILTER",
-                        fontSize = 18.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                Button(
-                    onClick = { /* Action for Einstellungen */ },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(60.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Red40),
-                    shape = RectangleShape,
-                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                ) {
-                    Text(
-                        text = "EINSTELLUNGEN",
+                        text = "\uD83D\uDCF7",
                         fontSize = 18.sp,
                         color = Color.White,
                         textAlign = TextAlign.Center,
@@ -207,7 +190,7 @@ class ScanActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Button(
-                    onClick = { /* Action for Filter */ },
+                    onClick = { /* Action for HomeButton */ },
                     modifier = Modifier
                         .weight(1f)
                         .height(60.dp),
@@ -216,11 +199,10 @@ class ScanActivity : ComponentActivity() {
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
                     Text(
-                        text = "FILTER",
-                        fontSize = 18.sp,
+                        text = "\uD83C\uDFE0",
+                        fontSize = 24.sp,
                         color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 }
                 Button(
