@@ -132,7 +132,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(10.dp) // Abstand zwischen Buttons
         ) {
             Button(
-                onClick = { /* Action for Filter */ },
+                onClick = {
+                    val intent = Intent(context, FilterActivity::class.java)
+                    context.startActivity(intent)
+                },
                 modifier = Modifier
                     .weight(1f) // Gleichmäßiges Ausfüllen
                     .height(150.dp), // Höhe direkt auf den Button angewendet
@@ -148,7 +151,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 )
             }
             Button(
-                onClick = { /* Action for Einstellungen */ },
+                onClick = {
+                    val intent = Intent(context, SettingsActivity::class.java)
+                    context.startActivity(intent)
+                },
                 modifier = Modifier
                     .weight(1f) // Gleichmäßiges Ausfüllen
                     .height(150.dp), // Höhe direkt auf den Button angewendet
