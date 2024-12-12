@@ -109,7 +109,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 )
             }
             Button(
-                onClick = { /* Action for Einkaufsliste */ },
+                onClick = {
+                    val intent = Intent(context, EinkaufslisteActivity::class.java)
+                    context.startActivity(intent)
+                },
                 modifier = Modifier
                     .weight(1f) // Gleichmäßiges Ausfüllen
                     .height(150.dp), // Höhe direkt auf den Button angewendet
