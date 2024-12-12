@@ -1,5 +1,6 @@
 package de.luh.hci.mid.productscanner
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -110,7 +111,12 @@ class EinkaufslisteActivity : ComponentActivity() {
             ) {
                 // Button 1
                 Button(
-                    onClick = { /* Action für Button 1 */ },
+                    onClick = {
+                        // Context korrekt übergeben, falls es zu Fehlern kommt
+                        val intent = Intent(this@EinkaufslisteActivity, EditItemActivity::class.java)
+                        startActivity(intent)
+                    },
+
                     modifier = Modifier
                         .size(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Blue40),
@@ -126,7 +132,8 @@ class EinkaufslisteActivity : ComponentActivity() {
 
                 // Button 2
                 Button(
-                    onClick = { /* Action für Button 2 */ },
+                    onClick = {
+                    },
                     modifier = Modifier
                         .size(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Red40),
@@ -134,7 +141,7 @@ class EinkaufslisteActivity : ComponentActivity() {
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
                     Text(
-                        text = "🛒", // Beispiel-Icon für Button 2
+                        text = "Add Item", // Beispiel-Icon für Button 2
                         fontSize = 18.sp,
                         color = Color.White
                     )
@@ -162,7 +169,11 @@ class EinkaufslisteActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.spacedBy(10.dp) // horizontalArrangement für Row
             ) {
                 Button(
-                    onClick = { /* Action for Kamera */ },
+                    onClick = {
+                        // Context korrekt übergeben, falls es zu Fehlern kommt
+                        val intent = Intent(this@EinkaufslisteActivity, AddItemActivitiy::class.java)
+                        startActivity(intent)
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(60.dp), // Einheitliche Höhe der Buttons
