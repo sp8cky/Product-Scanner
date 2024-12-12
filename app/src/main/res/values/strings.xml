@@ -19,4 +19,7 @@
     <string name="title_activity_filter">FilterActivity</string>
     <string name="title_activity_database">DatabaseActivity</string>
     <string name="title_activity_einkaufsliste">EinkaufslisteActivity</string>
+    <string name="title_activity_edit_item">EditItemActivity</string>
+    <string name="title_activity_settings2">SettingsActivity2</string>
+    <string name="title_activity_add_item_activitiy">AddItemActivitiy</string>
 </resources>
