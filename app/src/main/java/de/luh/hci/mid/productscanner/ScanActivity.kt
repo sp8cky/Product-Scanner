@@ -114,8 +114,7 @@ class ScanActivity : ComponentActivity() {
                     PreviewView(ctx).apply {
                         val cameraProvider = cameraProviderFuture.get()
                         val preview = androidx.camera.core.Preview.Builder().build()
-                        val cameraSelector =
-                            androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
+                        val cameraSelector = androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
                         val imageAnalyzer = androidx.camera.core.ImageAnalysis.Builder()
                             .build()
                             .apply {
@@ -156,7 +155,7 @@ class ScanActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Untere Buttons (KameraButton)
+            // Untere Buttons (Kamera-Button)
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -224,6 +223,4 @@ class ScanActivity : ComponentActivity() {
             }
         }
     }
-
 }
-

@@ -26,7 +26,7 @@ class FilterActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            SettingsScreen(
+            FilterScreen(
                 onHomeClicked = { finish() }, // Zurück zur vorherigen Aktivität
                 onSpeakerClicked = { /* Action for Lautsprecher */ }
             )
@@ -34,7 +34,7 @@ class FilterActivity : ComponentActivity() {
     }
 
     @Composable
-    fun SettingsScreen(
+    fun FilterScreen(
         onHomeClicked: () -> Unit,
         onSpeakerClicked: () -> Unit,
         modifier: Modifier = Modifier
