@@ -18,42 +18,32 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.theme.Red40
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Path
+import org.json.JSONObject
+import java.net.URL
 
 class InfoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val barcodeValue = intent.getStringExtra("BARCODE_VALUE") ?: "No barcode found"
-
-        val api = createOpenFoodFactsApi()
+        val barcodeValue = intent.getStringExtra("BARCODE_VALUE") ?: "Kein Barcode gefunden"
 
         setContent {
-            var productName by remember { mutableStateOf("Lade Produkt...") }
-            var brand by remember { mutableStateOf("Unbekannte Marke") }
-            var ingredients by remember { mutableStateOf("Keine Zutaten verfügbar") }
+            var productName by remember { mutableStateOf("Lade...") }
+            var brand by remember { mutableStateOf("Lade...") }
+            var ingredients by remember { mutableStateOf("Lade...") }
+            var productImageUrl by remember { mutableStateOf("") }
+
+            val scope = rememberCoroutineScope()
 
             LaunchedEffect(barcodeValue) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val response = api.getProduct(barcodeValue)
-                        if (response.status == 1 && response.product != null) {
-                            val product = response.product
-                            productName = product.product_name ?: "Unbekannt"
-                            brand = product.brands ?: "Unbekannte Marke"
-                            ingredients = product.ingredients_text ?: "Keine Zutaten verfügbar"
-                        } else {
-                            productName = "Produkt nicht gefunden"
-                        }
-                    } catch (e: Exception) {
-                        productName = "Fehler beim Laden"
-                    }
+                scope.launch(Dispatchers.IO) {
+                    val productData = fetchProductData(barcodeValue)
+                    productName = productData["name"] ?: "Unbekannt"
+                    brand = productData["brand"] ?: "Unbekannt"
+                    ingredients = productData["ingredients"] ?: "Keine Angaben"
+                    productImageUrl = productData["image_url"] ?: ""
                 }
             }
 
@@ -61,13 +51,40 @@ class InfoActivity : ComponentActivity() {
                 barcode = barcodeValue,
                 productName = productName,
                 brand = brand,
-                ingredients = ingredients
+                ingredients = ingredients,
+                productImageUrl = productImageUrl
             )
         }
     }
 
+    private fun fetchProductData(barcode: String): Map<String, String> {
+        return try {
+            val url = "https://world.openfoodfacts.org/api/v0/product/$barcode.json"
+            val response = URL(url).readText()
+            val json = JSONObject(response)
+            if (!json.has("product")) return emptyMap()
+
+            val product = json.getJSONObject("product")
+            mapOf(
+                "name" to product.optString("product_name", "Unbekannt"),
+                "brand" to product.optString("brands", "Unbekannt"),
+                "ingredients" to product.optString("ingredients_text_de", "Keine Angaben"),
+                "image_url" to product.optString("image_url", "")
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyMap()
+        }
+    }
+
     @Composable
-    fun InfoScreen(barcode: String, productName: String, brand: String, ingredients: String) {
+    fun InfoScreen(
+        barcode: String,
+        productName: String,
+        brand: String,
+        ingredients: String,
+        productImageUrl: String
+    ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             content = { paddingValues ->
@@ -88,23 +105,50 @@ class InfoActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Produktname und Barcode
-                    Text(
-                        text = "Name: $productName",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = "Marke: $brand",
-                        fontSize = 18.sp,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "Barcode: $barcode",
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
+                    // Produktbild und Basisinformationen
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Produktbild
+                        Image(
+                            painter = rememberImagePainter(
+                                data = productImageUrl.ifEmpty { "https://via.placeholder.com/150" },
+                                builder = {
+                                    crossfade(true)
+                                    placeholder(R.drawable.nutella) // Platzhalterbild
+                                }
+                            ),
+                            contentDescription = "Produktbild",
+                            modifier = Modifier
+                                .size(100.dp) // Quadratische Größe
+                                .padding(end = 16.dp)
+                        )
+
+                        // Produktdetails
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Name: $productName",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "Marke: $brand",
+                                fontSize = 18.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "Barcode: $barcode",
+                                fontSize = 16.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
 
                     // Zutaten
                     Spacer(modifier = Modifier.height(16.dp))
@@ -149,11 +193,9 @@ class InfoActivity : ComponentActivity() {
                 fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
-
-            // Checkbox (deaktiviert)
             androidx.compose.material3.Checkbox(
-                checked = true,
-                onCheckedChange = null,
+                checked = true, // Immer aktiv
+                onCheckedChange = null, // Keine Interaktion möglich
                 enabled = false
             )
         }
@@ -202,28 +244,4 @@ class InfoActivity : ComponentActivity() {
             }
         }
     }
-
-    private fun createOpenFoodFactsApi(): OpenFoodFactsApi {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://world.openfoodfacts.org/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        return retrofit.create(OpenFoodFactsApi::class.java)
-    }
-
-    interface OpenFoodFactsApi {
-        @GET("api/v0/product/{barcode}.json")
-        suspend fun getProduct(@Path("barcode") barcode: String): ProductResponse
-    }
-
-    data class ProductResponse(
-        val status: Int,
-        val product: ProductDetails?
-    )
-
-    data class ProductDetails(
-        val product_name: String?,
-        val brands: String?,
-        val ingredients_text: String?
-    )
 }
