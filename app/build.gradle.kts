@@ -66,6 +66,8 @@ dependencies {
     implementation(libs.barcode.scanning)
     implementation(libs.androidx.espresso.core)
     implementation("com.google.mlkit:barcode-scanning:17.0.2")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.preference)
     implementation(libs.material)
