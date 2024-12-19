@@ -11,11 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 import kotlinx.coroutines.Dispatchers
@@ -114,12 +116,14 @@ class InfoActivity : ComponentActivity() {
                     ) {
                         // Produktbild
                         Image(
-                            painter = rememberImagePainter(
-                                data = productImageUrl.ifEmpty { "https://via.placeholder.com/150" },
-                                builder = {
-                                    crossfade(true)
-                                    placeholder(R.drawable.nutella) // Platzhalterbild
-                                }
+                            painter = // Platzhalterbild
+                            rememberAsyncImagePainter(
+                                ImageRequest.Builder(LocalContext.current)
+                                    .data(data = productImageUrl.ifEmpty { "https://via.placeholder.com/150" })
+                                    .apply(block = fun ImageRequest.Builder.() {
+                                        crossfade(true)
+                                        placeholder(R.drawable.nutella) // Platzhalterbild
+                                    }).build()
                             ),
                             contentDescription = "Produktbild",
                             modifier = Modifier
@@ -193,7 +197,7 @@ class InfoActivity : ComponentActivity() {
                 fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
-            androidx.compose.material3.Checkbox(
+            Checkbox(
                 checked = true, // Immer aktiv
                 onCheckedChange = null, // Keine Interaktion möglich
                 enabled = false
