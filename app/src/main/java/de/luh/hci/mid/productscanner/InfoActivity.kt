@@ -5,9 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,6 +18,13 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.theme.Red40
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Path
 
 class InfoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,15 +32,42 @@ class InfoActivity : ComponentActivity() {
 
         val barcodeValue = intent.getStringExtra("BARCODE_VALUE") ?: "No barcode found"
 
+        val api = createOpenFoodFactsApi()
+
         setContent {
-            InfoScreen(barcodeValue)
+            var productName by remember { mutableStateOf("Lade Produkt...") }
+            var brand by remember { mutableStateOf("Unbekannte Marke") }
+            var ingredients by remember { mutableStateOf("Keine Zutaten verfügbar") }
+
+            LaunchedEffect(barcodeValue) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val response = api.getProduct(barcodeValue)
+                        if (response.status == 1 && response.product != null) {
+                            val product = response.product
+                            productName = product.product_name ?: "Unbekannt"
+                            brand = product.brands ?: "Unbekannte Marke"
+                            ingredients = product.ingredients_text ?: "Keine Zutaten verfügbar"
+                        } else {
+                            productName = "Produkt nicht gefunden"
+                        }
+                    } catch (e: Exception) {
+                        productName = "Fehler beim Laden"
+                    }
+                }
+            }
+
+            InfoScreen(
+                barcode = barcodeValue,
+                productName = productName,
+                brand = brand,
+                ingredients = ingredients
+            )
         }
     }
 
     @Composable
-    fun InfoScreen(barcode: String) {
-        val productImageUrl = "https://example.com/product_image.jpg" // Beispiel-URL für Produktbild
-
+    fun InfoScreen(barcode: String, productName: String, brand: String, ingredients: String) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             content = { paddingValues ->
@@ -55,62 +88,35 @@ class InfoActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Produktbild und Name
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Produktbild mit Platzhalter
-                        Image(
-                            painter = rememberImagePainter(
-                                productImageUrl,
-                                builder = {
-                                    crossfade(true)
-                                    placeholder(R.drawable.nutella)  // Platzhalter Bild
-                                }
-                            ),
-                            contentDescription = "Product Image",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .padding(end = 16.dp)
-                        )
+                    // Produktname und Barcode
+                    Text(
+                        text = "Name: $productName",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = "Marke: $brand",
+                        fontSize = 18.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "Barcode: $barcode",
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
 
-                        // Produktname und Barcode
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "Product Name",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
-                            Text(
-                                text = "Barcode: $barcode",
-                                fontSize = 16.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
+                    // Zutaten
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Zutaten: $ingredients",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    )
 
-                    // Zutaten nebeneinander
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp)
-                    ) {
-                        Text(
-                            text = "Zutaten: Zucker, Palmöl, HASELNÜSSE (13 %), MAGERMILCHPULVER (8,7 %), fettarmer Kakao (7,4%), Emulgator Lecithine (SOJA), Vanillin.Zucker, Palmöl, HASELNÜSSE (13 %), MAGERMILCHPULVER (8,7 %), fettarmer Kakao (7,4%), Emulgator Lecithine (SOJA), Vanillin.Zucker, Palmöl, HASELNÜSSE (13 %), MAGERMILCHPULVER (8,7 %), fettarmer Kakao (7,4%), Emulgator Lecithine (SOJA), Vanillin.", // Zutaten nebeneinander
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.Black
-                        )
-                    }
-
-                    // Spacer zwischen Zutaten und Filter
+                    // Filter mit Checkboxen
                     Spacer(modifier = Modifier.height(24.dp))
-
-                    // Filter mit Checkboxen (deaktiviert)
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -123,7 +129,7 @@ class InfoActivity : ComponentActivity() {
                     }
                 }
             },
-            bottomBar = { // Buttons am unteren Rand fixieren
+            bottomBar = {
                 BottomBar()
             }
         )
@@ -144,10 +150,10 @@ class InfoActivity : ComponentActivity() {
                 color = Color.Black
             )
 
-            // Checkbox (deaktiviert, nicht änderbar)
+            // Checkbox (deaktiviert)
             androidx.compose.material3.Checkbox(
-                checked = true, // Immer aktiv
-                onCheckedChange = null, // Keine Interaktion möglich
+                checked = true,
+                onCheckedChange = null,
                 enabled = false
             )
         }
@@ -162,7 +168,7 @@ class InfoActivity : ComponentActivity() {
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Button(
-                onClick = { finish() }, // Zurück zur vorherigen Aktivität
+                onClick = { finish() },
                 modifier = Modifier
                     .weight(1f)
                     .height(60.dp),
@@ -171,7 +177,7 @@ class InfoActivity : ComponentActivity() {
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
                 Text(
-                    text = "\uD83C\uDFE0", // Home Icon
+                    text = "\uD83C\uDFE0",
                     fontSize = 24.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center
@@ -188,7 +194,7 @@ class InfoActivity : ComponentActivity() {
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
                 Text(
-                    text = "🔊", // Lautsprecher Icon
+                    text = "🔊",
                     fontSize = 24.sp,
                     color = Color.White,
                     textAlign = TextAlign.Center
@@ -196,4 +202,28 @@ class InfoActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun createOpenFoodFactsApi(): OpenFoodFactsApi {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://world.openfoodfacts.org/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        return retrofit.create(OpenFoodFactsApi::class.java)
+    }
+
+    interface OpenFoodFactsApi {
+        @GET("api/v0/product/{barcode}.json")
+        suspend fun getProduct(@Path("barcode") barcode: String): ProductResponse
+    }
+
+    data class ProductResponse(
+        val status: Int,
+        val product: ProductDetails?
+    )
+
+    data class ProductDetails(
+        val product_name: String?,
+        val brands: String?,
+        val ingredients_text: String?
+    )
 }
