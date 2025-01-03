@@ -4,74 +4,120 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import de.luh.hci.mid.productscanner.ui.theme.Blue40
-import de.luh.hci.mid.productscanner.ui.theme.Red40
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.io.File
 import java.net.URL
 
 class InfoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val barcodeValue = intent.getStringExtra("BARCODE_VALUE") ?: "Kein Barcode gefunden"
+        val barcodeValue = intent.getStringExtra("BARCODE_VALUE")
+        val imagePath = intent.getStringExtra("IMAGE_PATH") // Vom Kamerabutton übergeben
 
         setContent {
             var productName by remember { mutableStateOf("Lade...") }
             var brand by remember { mutableStateOf("Lade...") }
             var ingredients by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf("") }
+            var filters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+            var isExpanded by remember { mutableStateOf(false) } // Einheitliche Expansion-Logik
 
             val scope = rememberCoroutineScope()
 
+            // API-Anfrage nur ausführen, wenn ein Barcode verfügbar ist
             LaunchedEffect(barcodeValue) {
-                scope.launch(Dispatchers.IO) {
-                    val productData = fetchProductData(barcodeValue)
-                    productName = productData["name"] ?: "Unbekannt"
-                    brand = productData["brand"] ?: "Unbekannt"
-                    ingredients = productData["ingredients"] ?: "Keine Angaben"
-                    productImageUrl = productData["image_url"] ?: ""
+                barcodeValue?.let {
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            val productData = fetchProductData(it)
+                            productName = productData["name"] as? String ?: "Unbekannt"
+                            brand = productData["brand"] as? String ?: "Unbekannt"
+                            ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
+                            productImageUrl =
+                                productData["image_url"] as? String ?: ""
+                            filters = productData["filters"] as? Map<String, Boolean>
+                                ?: emptyMap()
+                        } catch (e: Exception) {
+                            productName = "Fehler beim Laden"
+                            brand = "Fehler"
+                            ingredients = "Fehler"
+                            productImageUrl = ""
+                            filters = emptyMap()
+                            e.printStackTrace()
+                        }
+                    }
                 }
             }
 
-            InfoScreen(
-                barcode = barcodeValue,
-                productName = productName,
-                brand = brand,
-                ingredients = ingredients,
-                productImageUrl = productImageUrl
-            )
+            Scaffold(
+                topBar = { TopNavigationBar(title = "Info") },
+                bottomBar = { BottomNavigationBar(navController = null) }
+            ) { padding ->
+                InfoScreen(
+                    barcode = barcodeValue,
+                    imagePath = imagePath,
+                    productName = productName,
+                    brand = brand,
+                    ingredients = ingredients,
+                    productImageUrl = productImageUrl,
+                    filters = filters,
+                    isExpanded = isExpanded,
+                    onExpandToggle = { isExpanded = !isExpanded },
+                    modifier = Modifier.padding(padding)
+                )
+            }
         }
     }
 
-    private fun fetchProductData(barcode: String): Map<String, String> {
+    private fun fetchProductData(barcode: String): Map<String, Any> {
         return try {
             val url = "https://world.openfoodfacts.org/api/v0/product/$barcode.json"
             val response = URL(url).readText()
             val json = JSONObject(response)
-            if (!json.has("product")) return emptyMap()
+
+            if (!json.has("product") || json.optJSONObject("product") == null) {
+                return emptyMap()
+            }
 
             val product = json.getJSONObject("product")
+            val filters = mutableMapOf<String, Boolean>()
+
+            product.optJSONArray("ingredients_analysis_tags")?.let { tags ->
+                filters["Vegetarisch"] = tags.toString().contains("en:vegetarian")
+                filters["Vegan"] = tags.toString().contains("en:vegan")
+            }
+            product.optJSONArray("allergens_tags")?.let { tags ->
+                filters["Nussfrei"] = !tags.toString().contains("en:nuts")
+                filters["Laktosefrei"] = !tags.toString().contains("en:milk")
+            }
+
             mapOf(
                 "name" to product.optString("product_name", "Unbekannt"),
                 "brand" to product.optString("brands", "Unbekannt"),
                 "ingredients" to product.optString("ingredients_text_de", "Keine Angaben"),
-                "image_url" to product.optString("image_url", "")
+                "image_url" to product.optString("image_url", ""),
+                "filters" to filters
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -81,171 +127,141 @@ class InfoActivity : ComponentActivity() {
 
     @Composable
     fun InfoScreen(
-        barcode: String,
+        barcode: String?,
+        imagePath: String?,
         productName: String,
         brand: String,
         ingredients: String,
-        productImageUrl: String
+        productImageUrl: String,
+        filters: Map<String, Boolean>,
+        isExpanded: Boolean,
+        onExpandToggle: () -> Unit,
+        modifier: Modifier = Modifier
     ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            content = { paddingValues ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Header
-                    Text(
-                        text = "Info",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+        val isLoading = productName == "Lade..." || brand == "Lade..." || ingredients == "Lade..."
 
-                    // Produktbild und Basisinformationen
+        if (isLoading && imagePath == null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Zeige Bild, wenn ein Bildpfad übergeben wurde
+                imagePath?.let {
+                    item {
+                        Image(
+                            painter = rememberAsyncImagePainter(File(it)),
+                            contentDescription = "Aufgenommenes Bild",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        )
+                    }
+                }
+
+                // Produktinformationen anzeigen
+                barcode?.let {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    ImageRequest.Builder(LocalContext.current)
+                                        .data(data = productImageUrl.ifEmpty { "https://via.placeholder.com/150" })
+                                        .apply { crossfade(true) }.build()
+                                ),
+                                contentDescription = "Produktbild",
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .padding(end = 16.dp)
+                            )
+
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = "Name: $productName",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Marke: $brand",
+                                    fontSize = 18.sp
+                                )
+                                Text(
+                                    text = "Barcode: $barcode",
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Aufklappbare Zutatenliste
+                item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clickable { onExpandToggle() }
                             .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Produktbild
-                        Image(
-                            painter = // Platzhalterbild
-                            rememberAsyncImagePainter(
-                                ImageRequest.Builder(LocalContext.current)
-                                    .data(data = productImageUrl.ifEmpty { "https://via.placeholder.com/150" })
-                                    .apply(block = fun ImageRequest.Builder.() {
-                                        crossfade(true)
-                                        placeholder(R.drawable.nutella) // Platzhalterbild
-                                    }).build()
-                            ),
-                            contentDescription = "Produktbild",
-                            modifier = Modifier
-                                .size(100.dp) // Quadratische Größe
-                                .padding(end = 16.dp)
-                        )
-
-                        // Produktdetails
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Name: $productName",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
-                            Text(
-                                text = "Marke: $brand",
-                                fontSize = 18.sp,
-                                color = Color.Gray
-                            )
-                            Text(
-                                text = "Barcode: $barcode",
+                                text = if (isExpanded) "Zutaten: $ingredients"
+                                else "Zutaten: ${ingredients.take(50)}" +
+                                        if (!isExpanded && ingredients.length > 50) "..." else "",
                                 fontSize = 16.sp,
-                                color = Color.Gray
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
-                    }
-
-                    // Zutaten
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Zutaten: $ingredients",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black
-                    )
-
-                    // Filter mit Checkboxen
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        FilterItem(label = "Vegetarisch")
-                        FilterItem(label = "Vegan")
-                        FilterItem(label = "Nussfrei")
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (isExpanded) "Einklappen" else "Aufklappen",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
-            },
-            bottomBar = {
-                BottomBar()
+
+                // Dynamische Filteranzeige
+                filters.forEach { (label, isActive) ->
+                    item {
+                        FilterItem(label = label, isActive = isActive)
+                    }
+                }
             }
-        )
+        }
     }
 
     @Composable
-    fun FilterItem(label: String) {
+    fun FilterItem(label: String, isActive: Boolean) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = label,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
+                fontWeight = FontWeight.Medium
             )
             Checkbox(
-                checked = true, // Immer aktiv
-                onCheckedChange = null, // Keine Interaktion möglich
+                checked = isActive,
+                onCheckedChange = null,
                 enabled = false
             )
-        }
-    }
-
-    @Composable
-    fun BottomBar() {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Button(
-                onClick = { finish() },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(60.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Red40),
-                shape = RectangleShape,
-                elevation = ButtonDefaults.buttonElevation(0.dp)
-            ) {
-                Text(
-                    text = "\uD83C\uDFE0",
-                    fontSize = 24.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Button(
-                onClick = { /* Lautsprecher Action */ },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(60.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Blue40),
-                shape = RectangleShape,
-                elevation = ButtonDefaults.buttonElevation(0.dp)
-            ) {
-                Text(
-                    text = "🔊",
-                    fontSize = 24.sp,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-            }
         }
     }
 }
