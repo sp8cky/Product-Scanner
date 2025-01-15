@@ -109,7 +109,8 @@ fun HomeScreen(navController: NavController) {
         ) {
             Button(
                 onClick = {
-                    navController.navigate("tts") // Beispiel: Navigation zu Verlauf
+                    val intent = Intent(context, DatabaseActivity::class.java)
+                    context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f), // Höhe füllt den verfügbaren Platz
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -125,7 +126,8 @@ fun HomeScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    navController.navigate("tts") // Beispiel: Navigation zu Einkaufsliste
+                    val intent = Intent(context, EinkaufslisteActivity::class.java)
+                    context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -152,7 +154,8 @@ fun HomeScreen(navController: NavController) {
         ) {
             Button(
                 onClick = {
-                    navController.navigate("tts") // Beispiel: Navigation zu Filter
+                    val intent = Intent(context, FilterActivity::class.java)
+                    context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
@@ -168,7 +171,8 @@ fun HomeScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    navController.navigate("tts") // Beispiel: Navigation zu Einstellungen
+                    val intent = Intent(context, SettingsActivity::class.java)
+                    context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),

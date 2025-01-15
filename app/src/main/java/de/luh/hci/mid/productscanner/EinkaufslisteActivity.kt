@@ -17,6 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 
@@ -25,56 +27,65 @@ class EinkaufslisteActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            EinkaufslisteScreen(
-                onHomeClicked = { finish() }, // Zurück zur vorherigen Aktivität
-                onSpeakerClicked = { /* Lautsprecher Action */ }
-            )
+            EinkaufslisteScreen()
         }
     }
 
     @Composable
-    fun EinkaufslisteScreen(
-        onHomeClicked: () -> Unit,
-        onSpeakerClicked: () -> Unit,
-        modifier: Modifier = Modifier
-    ) {
+    fun EinkaufslisteScreen(modifier: Modifier = Modifier) {
         Scaffold(
-            content = { paddingValues ->
-                Column(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(16.dp)
+            topBar = { TopNavigationBar(title = "Einkaufsliste") },
+            bottomBar = { BottomNavigationBar(navController = null) }
+        ) { paddingValues ->
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+            ) {
+                // LazyColumn für die Liste der Einträge
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f) // Füllt den verbleibenden Raum
                 ) {
-                    // Header
-                    Text(
-                        text = "Einkaufsliste",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // LazyColumn für die Liste der Einträge
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f) // Füllt den verbleibenden Raum
-                            .padding(bottom = 80.dp) // Platz für die Buttons am unteren Rand
-                    ) {
-                        items(10) { index -> // Beispiel: 10 Einträge
-                            EntryItem(entryNumber = index + 1, productName = "Produkt $index")
-                        }
+                    items(10) { index -> // Beispiel: 10 Einträge
+                        EntryItem(entryNumber = index + 1, productName = "Produkt $index")
                     }
                 }
-            },
-            bottomBar = { // Buttons am unteren Rand fixieren
-                BottomBar(onHomeClicked, onSpeakerClicked)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // + Button am unteren Ende
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp) // horizontalArrangement für Row
+                ) {
+                    Button(
+                        onClick = {
+                            // Context korrekt übergeben, falls es zu Fehlern kommt
+                            val intent = Intent(this@EinkaufslisteActivity, AddItemActivitiy::class.java)
+                            startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp), // Einheitliche Höhe der Buttons
+                        colors = ButtonDefaults.buttonColors(containerColor = Red40),
+                        shape = RectangleShape,
+                        elevation = ButtonDefaults.buttonElevation(0.dp)
+                    ) {
+                        Text(
+                            text = "+",
+                            fontSize = 18.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
             }
-        )
+        }
     }
 
     @Composable
@@ -112,7 +123,6 @@ class EinkaufslisteActivity : ComponentActivity() {
                 // Button 1
                 Button(
                     onClick = {
-                        // Context korrekt übergeben, falls es zu Fehlern kommt
                         val intent = Intent(this@EinkaufslisteActivity, EditItemActivity::class.java)
                         startActivity(intent)
                     },
@@ -144,91 +154,6 @@ class EinkaufslisteActivity : ComponentActivity() {
                         text = "Add Item", // Beispiel-Icon für Button 2
                         fontSize = 18.sp,
                         color = Color.White
-                    )
-                }
-            }
-        }
-    }
-
-    // BottomBar mit den Action-Buttons
-    @Composable
-    fun BottomBar(
-        onHomeClicked: () -> Unit,
-        onSpeakerClicked: () -> Unit,
-        modifier: Modifier = Modifier // Modifier wird jetzt als Parameter übergeben
-    ) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp) // Padding rechts und links
-        ) {
-            // Untere Buttons (Kamera-Button)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp) // horizontalArrangement für Row
-            ) {
-                Button(
-                    onClick = {
-                        // Context korrekt übergeben, falls es zu Fehlern kommt
-                        val intent = Intent(this@EinkaufslisteActivity, AddItemActivitiy::class.java)
-                        startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(60.dp), // Einheitliche Höhe der Buttons
-                    colors = ButtonDefaults.buttonColors(containerColor = Red40),
-                    shape = RectangleShape,
-                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                ) {
-                    Text(
-                        text = "+",
-                        fontSize = 18.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Footer Row für Lautsprecher und Home-Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp) // horizontalArrangement hier auch für Row
-            ) {
-                Button(
-                    onClick = { onHomeClicked() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(60.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Red40),
-                    shape = RectangleShape,
-                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                ) {
-                    Text(
-                        text = "\uD83C\uDFE0", // Home Icon
-                        fontSize = 24.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                }
-                Button(
-                    onClick = { onSpeakerClicked() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(60.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Blue40),
-                    shape = RectangleShape,
-                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                ) {
-                    Text(
-                        text = "🔊", // Lautsprecher Icon
-                        fontSize = 24.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
                     )
                 }
             }

@@ -1,12 +1,16 @@
 package de.luh.hci.mid.productscanner.ui.navigationbar
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 
 
@@ -17,8 +21,11 @@ fun TopNavigationBar(title: String) {
         title = {
             Text(
                 text = title,
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.primary // Nutze Theme-Farben
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

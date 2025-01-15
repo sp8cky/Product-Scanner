@@ -16,7 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.luh.hci.mid.productscanner.ui.theme.ProductscannerTheme
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 
@@ -40,138 +41,86 @@ class SettingsActivity : ComponentActivity() {
         modifier: Modifier = Modifier
     ) {
         Scaffold(
-            content = { paddingValues ->
+            topBar = { TopNavigationBar(title = "Einstellungen") },
+            bottomBar = { BottomNavigationBar(navController = null) }
+        ) { paddingValues ->
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp), // Zusätzliche Polsterung
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                // Liste mit Einstellungen und Toggles
                 Column(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(16.dp), // Zusätzliche Polsterung
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Header
-                    Text(
-                        text = "Einstellungen",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    SettingItem(label = "Toggle 1")
+                    SettingItem(label = "Dark Mode")
+                    SettingItem(label = "Toggle 3")
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Liste mit Einstellungen und Toggles
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    // Voice Auswahl
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        SettingItem(label = "Toggle 1")
-                        SettingItem(label = "Dark Mode")
-                        SettingItem(label = "Toggle 3")
+                        Text(
+                            text = "Voice",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
 
-                        // Voice Auswahl
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Voice",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            )
-
-                            val selectedOption = remember { mutableStateOf("Option 1") }
-                            DropdownMenuButton(
-                                options = listOf(
-                                    "Option 1",
-                                    "Option 2",
-                                    "Option 3",
-                                    "Option 4",
-                                    "Option 5"
-                                ),
-                                selectedOption = selectedOption.value,
-                                onOptionSelected = { selectedOption.value = it }
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Volume Slider
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "Volume",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            )
-
-                            val volumeLevel = remember { mutableStateOf(50f) }
-                            Slider(
-                                value = volumeLevel.value,
-                                onValueChange = { volumeLevel.value = it },
-                                valueRange = 0f..100f,
-                                colors = SliderDefaults.colors(
-                                    thumbColor = Blue40,
-                                    activeTrackColor = Blue40
-                                )
-                            )
-                        }
+                        val selectedOption = remember { mutableStateOf("Option 1") }
+                        DropdownMenuButton(
+                            options = listOf(
+                                "Option 1",
+                                "Option 2",
+                                "Option 3",
+                                "Option 4",
+                                "Option 5"
+                            ),
+                            selectedOption = selectedOption.value,
+                            onOptionSelected = { selectedOption.value = it }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Footer Row für Home und Lautsprecher Buttons
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    // Volume Slider
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(
-                            onClick = { onHomeClicked() },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(60.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Red40),
-                            shape = RectangleShape,
-                            elevation = ButtonDefaults.buttonElevation(0.dp)
-                        ) {
-                            Text(
-                                text = "🏠", // Home Icon
-                                fontSize = 24.sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        Text(
+                            text = "Volume",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
 
-                        Button(
-                            onClick = { onSpeakerClicked() },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(60.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Blue40),
-                            shape = RectangleShape,
-                            elevation = ButtonDefaults.buttonElevation(0.dp)
-                        ) {
-                            Text(
-                                text = "🔊", // Speaker Icon
-                                fontSize = 24.sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
+                        val volumeLevel = remember { mutableStateOf(50f) }
+                        Slider(
+                            value = volumeLevel.value,
+                            onValueChange = { volumeLevel.value = it },
+                            valueRange = 0f..100f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Blue40,
+                                activeTrackColor = Blue40
                             )
-                        }
+                        )
                     }
                 }
+
             }
-        )
+        }
     }
 
     @Composable
@@ -234,5 +183,4 @@ class SettingsActivity : ComponentActivity() {
             }
         }
     }
-
 }
