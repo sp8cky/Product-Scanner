@@ -1,6 +1,7 @@
 package de.luh.hci.mid.productscanner
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -24,6 +25,11 @@ import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
 import java.io.File
 import java.net.URL
@@ -33,7 +39,7 @@ class InfoActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val barcodeValue = intent.getStringExtra("BARCODE_VALUE")
-        val imagePath = intent.getStringExtra("IMAGE_PATH") // Vom Kamerabutton übergeben
+        val imagePath = intent.getStringExtra("IMAGE_PATH")
 
         setContent {
             var productName by remember { mutableStateOf("Lade...") }
@@ -41,11 +47,10 @@ class InfoActivity : ComponentActivity() {
             var ingredients by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf("") }
             var filters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
-            var isExpanded by remember { mutableStateOf(false) } // Einheitliche Expansion-Logik
+            var isExpanded by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
 
-            // API-Anfrage nur ausführen, wenn ein Barcode verfügbar ist
             LaunchedEffect(barcodeValue) {
                 barcodeValue?.let {
                     scope.launch(Dispatchers.IO) {
@@ -54,17 +59,29 @@ class InfoActivity : ComponentActivity() {
                             productName = productData["name"] as? String ?: "Unbekannt"
                             brand = productData["brand"] as? String ?: "Unbekannt"
                             ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
-                            productImageUrl =
-                                productData["image_url"] as? String ?: ""
-                            filters = productData["filters"] as? Map<String, Boolean>
-                                ?: emptyMap()
+                            productImageUrl = productData["image_url"] as? String ?: ""
+                            filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
                         } catch (e: Exception) {
+                            Log.e("InfoActivity", "Error fetching product data", e)
                             productName = "Fehler beim Laden"
                             brand = "Fehler"
                             ingredients = "Fehler"
                             productImageUrl = ""
                             filters = emptyMap()
-                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+
+            LaunchedEffect(imagePath) {
+                imagePath?.let {
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            val result = fetchProductNameFromImage(it)
+                            productName = result
+                        } catch (e: Exception) {
+                            Log.e("InfoActivity", "Error processing image", e)
+                            productName = "Fehler beim Verarbeiten des Bildes"
                         }
                     }
                 }
@@ -120,8 +137,47 @@ class InfoActivity : ComponentActivity() {
                 "filters" to filters
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("InfoActivity", "Error fetching product data", e)
             emptyMap()
+        }
+    }
+
+    private suspend fun fetchProductNameFromImage(imagePath: String): String {
+        return try {
+            val url = "https://api.openai.com/v1/images:analyze"
+            val file = File(imagePath)
+
+            if (!file.exists()) {
+                return "Fehler: Bild nicht gefunden"
+            }
+
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.name, file.asRequestBody("image/jpeg".toMediaType()))
+                .build()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Authorization", "Bearer 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\n")
+                .build()
+
+            val client = OkHttpClient.Builder()
+                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string()
+                val json = JSONObject(responseBody ?: "{}")
+                return json.optString("description", "Unbekanntes Produkt2")
+            } else {
+                return "Fehler: ${response.message}"
+            }
+        } catch (e: Exception) {
+            return "Fehler beim Senden des Bildes"
         }
     }
 
@@ -154,7 +210,6 @@ class InfoActivity : ComponentActivity() {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Zeige Bild, wenn ein Bildpfad übergeben wurde
                 imagePath?.let {
                     item {
                         Image(
@@ -167,7 +222,6 @@ class InfoActivity : ComponentActivity() {
                     }
                 }
 
-                // Produktinformationen anzeigen
                 barcode?.let {
                     item {
                         Row(
@@ -207,7 +261,6 @@ class InfoActivity : ComponentActivity() {
                     }
                 }
 
-                // Aufklappbare Zutatenliste
                 item {
                     Row(
                         modifier = Modifier
@@ -235,7 +288,6 @@ class InfoActivity : ComponentActivity() {
                     }
                 }
 
-                // Dynamische Filteranzeige
                 filters.forEach { (label, isActive) ->
                     item {
                         FilterItem(label = label, isActive = isActive)
