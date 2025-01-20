@@ -87,6 +87,7 @@ class ImageInfoActivity : ComponentActivity() {
     private suspend fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
         // Implementiere die Logik für den API-Aufruf oder Rückgabewerte.
         // Dummy-Wert zurückgeben.
+        //TODO
         return mapOf(
             "name" to "Testprodukt",
             "brand" to "Testmarke",
