@@ -28,6 +28,8 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
@@ -52,7 +54,9 @@ class ImageInfoActivity : ComponentActivity() {
                 imagePath?.let {
                     scope.launch(Dispatchers.IO) {
                         try {
+                            Log.d("ImageInfoActivity", "Starting fetchProductDetailsFromImage")
                             val productData = fetchProductDetailsFromImage(it)
+                            Log.d("ImageInfoActivity", "Product data fetched: $productData")
                             productName = productData["name"] as? String ?: "Unbekannt"
                             brand = productData["brand"] as? String ?: "Unbekannt"
                             ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
@@ -85,15 +89,102 @@ class ImageInfoActivity : ComponentActivity() {
     }
 
     private suspend fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
-        // Implementiere die Logik für den API-Aufruf oder Rückgabewerte.
-        // Dummy-Wert zurückgeben.
-        //TODO
-        return mapOf(
-            "name" to "Testprodukt",
-            "brand" to "Testmarke",
-            "ingredients" to "Testzutaten",
-            "filters" to mapOf("Vegan" to true, "Vegetarisch" to true)
-        )
+        val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Schlüssel sicher aus BuildConfig
+        val url = "https://api.openai.com/v1/chat/completions"
+        val client = OkHttpClient()
+
+        try {
+            val file = File(imagePath)
+
+            // Überprüfen, ob die Datei existiert
+            if (!file.exists()) {
+                Log.e("ImageInfoActivity", "Image file does not exist: $imagePath")
+                return mapOf("error" to "Fehler: Bild nicht gefunden")
+            }
+
+            Log.d("ImageInfoActivity", "Encoding image to Base64")
+            val base64Image = file.inputStream().use {
+                android.util.Base64.encodeToString(it.readBytes(), android.util.Base64.DEFAULT)
+            }
+
+            Log.d("ImageInfoActivity", "Creating JSON request")
+            val jsonRequest = JSONObject().apply {
+                put("model", "gpt-4o-mini")
+                put("messages", JSONArray().apply {
+                    put(
+                        JSONObject().apply {
+                            put("role", "user")
+                            put(
+                                "content",
+                                JSONArray().apply {
+                                    put(JSONObject().apply { put("type", "text"); put("text", "What's in this image?") })
+                                    put(
+                                        JSONObject().apply {
+                                            put("type", "image_url")
+                                            put("image_url", JSONObject().apply {
+                                                put("url", "data:image/jpeg;base64,$base64Image")
+                                            })
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    )
+                })
+            }
+
+            Log.d("ImageInfoActivity", "JSON request created: $jsonRequest")
+
+            val requestBody = jsonRequest.toString().toRequestBody("application/json".toMediaType())
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Authorization", "Bearer $apiKey")
+                .addHeader("Content-Type", "application/json")
+                .build()
+
+            Log.d("ImageInfoActivity", "Sending request to OpenAI API")
+            val response = client.newCall(request).execute()
+
+            Log.d("ImageInfoActivity", "Response received: Code ${response.code}")
+
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string()
+                if (!responseBody.isNullOrEmpty()) {
+                    Log.d("ImageInfoActivity", "Response body: $responseBody")
+                    val jsonResponse = JSONObject(responseBody)
+
+                    val productName = jsonResponse.optString("name", "Unbekannt")
+                    val brand = jsonResponse.optString("brand", "Unbekannt")
+                    val ingredients = jsonResponse.optString("ingredients", "Keine Angaben")
+                    val filters = mutableMapOf<String, Boolean>()
+
+                    jsonResponse.optJSONObject("filters")?.let { filterObj ->
+                        filters["Vegetarisch"] = filterObj.optBoolean("vegetarian", false)
+                        filters["Vegan"] = filterObj.optBoolean("vegan", false)
+                        filters["Nussfrei"] = filterObj.optBoolean("nut_free", false)
+                        filters["Laktosefrei"] = filterObj.optBoolean("lactose_free", false)
+                    }
+
+                    return mapOf(
+                        "name" to productName,
+                        "brand" to brand,
+                        "ingredients" to ingredients,
+                        "filters" to filters
+                    )
+                } else {
+                    Log.e("ImageInfoActivity", "Empty response body")
+                    return mapOf("error" to "Leere Antwort vom Server erhalten.")
+                }
+            } else {
+                Log.e("ImageInfoActivity", "Error response: ${response.code} - ${response.message}")
+                return mapOf("error" to "Fehler: ${response.code} - ${response.message}")
+            }
+        } catch (e: Exception) {
+            Log.e("ImageInfoActivity", "Exception during API call: ${e.message}", e)
+            return mapOf("error" to "Fehler beim Senden des Bildes: ${e.message}")
+        }
     }
 }
 
@@ -139,7 +230,8 @@ fun ImageProductDetailsScreen(
                 Image(
                     painter = rememberAsyncImagePainter(
                         ImageRequest.Builder(LocalContext.current)
-                            .data(File(productImageUrl).takeIf { File(productImageUrl).exists() } ?: productImageUrl)
+                            .data(File(productImageUrl).takeIf { File(productImageUrl).exists() }
+                                ?: productImageUrl)
                             .apply { crossfade(true) }
                             .build()
                     ),
