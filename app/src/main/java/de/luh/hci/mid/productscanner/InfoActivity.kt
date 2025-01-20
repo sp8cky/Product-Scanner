@@ -58,7 +58,7 @@ class InfoActivity : ComponentActivity() {
                             val productData = fetchProductData(it)
                             productName = productData["name"] as? String ?: "Unbekannt"
                             brand = productData["brand"] as? String ?: "Unbekannt"
-                            ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
+                            ingredients = productData["ingredients"] as? String ?: "Keine Angaben123"
                             productImageUrl = productData["image_url"] as? String ?: ""
                             filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
                         } catch (e: Exception) {
@@ -77,8 +77,11 @@ class InfoActivity : ComponentActivity() {
                 imagePath?.let {
                     scope.launch(Dispatchers.IO) {
                         try {
-                            val result = fetchProductNameFromImage(it)
-                            productName = result
+                            val productData = fetchProductDetailsFromImage(it)
+                            productName = productData["name"] as? String ?: "Unbekannt"
+                            brand = productData["brand"] as? String ?: "Unbekannt"
+                            ingredients = productData["ingredients"] as? String ?: "Keine Angaben60"
+                            filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
                         } catch (e: Exception) {
                             Log.e("InfoActivity", "Error processing image", e)
                             productName = "Fehler beim Verarbeiten des Bildes"
@@ -132,7 +135,7 @@ class InfoActivity : ComponentActivity() {
             mapOf(
                 "name" to product.optString("product_name", "Unbekannt"),
                 "brand" to product.optString("brands", "Unbekannt"),
-                "ingredients" to product.optString("ingredients_text_de", "Keine Angaben"),
+                "ingredients" to product.optString("ingredients_text_de", "Keine Angaben90"),
                 "image_url" to product.optString("image_url", ""),
                 "filters" to filters
             )
@@ -142,13 +145,13 @@ class InfoActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun fetchProductNameFromImage(imagePath: String): String {
+    private suspend fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
         return try {
             val url = "https://api.openai.com/v1/images:analyze"
             val file = File(imagePath)
 
             if (!file.exists()) {
-                return "Fehler: Bild nicht gefunden"
+                return mapOf("name" to "Fehler: Bild nicht gefunden")
             }
 
             val requestBody = MultipartBody.Builder()
@@ -159,7 +162,7 @@ class InfoActivity : ComponentActivity() {
             val request = Request.Builder()
                 .url(url)
                 .post(requestBody)
-                .addHeader("Authorization", "Bearer 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\n")
+                .addHeader("Authorization", "Bearer ${BuildConfig.OPENAI_API_KEY}")
                 .build()
 
             val client = OkHttpClient.Builder()
@@ -172,12 +175,24 @@ class InfoActivity : ComponentActivity() {
             if (response.isSuccessful) {
                 val responseBody = response.body?.string()
                 val json = JSONObject(responseBody ?: "{}")
-                return json.optString("description", "Unbekanntes Produkt2")
+                val filters = mutableMapOf<String, Boolean>()
+
+                json.optJSONArray("tags")?.let { tags ->
+                    filters["Vegetarisch"] = tags.toString().contains("vegetarian")
+                    filters["Vegan"] = tags.toString().contains("vegan")
+                }
+
+                mapOf(
+                    "name" to json.optString("name", "Unbekannt"),
+                    "brand" to json.optString("brand", "Unbekannt"),
+                    "ingredients" to json.optString("ingredients", "Keine Angaben2"),
+                    "filters" to filters
+                )
             } else {
-                return "Fehler: ${response.message}"
+                mapOf("name" to "Fehler: ${response.message}")
             }
         } catch (e: Exception) {
-            return "Fehler beim Senden des Bildes"
+            mapOf("name" to "Fehler beim Senden des Bildes")
         }
     }
 

@@ -33,7 +33,8 @@ import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import java.io.File
 
 class ScanActivity : ComponentActivity() {
-    private var isInfoActivityOpened = false // Add this flag
+    private var isInfoActivityOpened = false // Flag, um doppelte Navigation zu vermeiden
+    private lateinit var cameraProvider: ProcessCameraProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,25 +42,44 @@ class ScanActivity : ComponentActivity() {
         setContent {
             ScanScreen(
                 onBarcodeScanned = { barcode ->
-                    if (!isInfoActivityOpened) { // Check if InfoActivity is already opened
+                    if (!isInfoActivityOpened) {
                         isInfoActivityOpened = true
-                        val intent = Intent(this, InfoActivity::class.java).apply {
+                        releaseCamera()
+                        val intent = Intent(this, BarcodeInfoActivity::class.java).apply {
                             putExtra("BARCODE_VALUE", barcode)
                             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                         startActivity(intent)
-                        finish() // Close the ScanActivity
+                        finish()
+                    }
+                },
+                onImageCaptured = { imagePath ->
+                    if (!isInfoActivityOpened) {
+                        isInfoActivityOpened = true
+                        releaseCamera()
+                        val intent = Intent(this, ImageInfoActivity::class.java).apply {
+                            putExtra("IMAGE_PATH", imagePath)
+                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        startActivity(intent)
+                        finish()
                     }
                 }
             )
         }
     }
+
+    private fun releaseCamera() {
+        ProcessCameraProvider.getInstance(this).get().unbindAll()
+    }
 }
+
 
 @OptIn(ExperimentalGetImage::class)
 @Composable
 fun ScanScreen(
-    onBarcodeScanned: (String) -> Unit
+    onBarcodeScanned: (String) -> Unit,
+    onImageCaptured: (String) -> Unit
 ) {
     val context = LocalContext.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
@@ -126,10 +146,7 @@ fun ScanScreen(
                             ContextCompat.getMainExecutor(context),
                             object : ImageCapture.OnImageSavedCallback {
                                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                    val intent = Intent(context, InfoActivity::class.java).apply {
-                                        putExtra("IMAGE_PATH", photoFile.absolutePath)
-                                    }
-                                    context.startActivity(intent)
+                                    onImageCaptured(photoFile.absolutePath) // Aufruf der Callback-Funktion
                                 }
 
                                 override fun onError(exception: ImageCaptureException) {

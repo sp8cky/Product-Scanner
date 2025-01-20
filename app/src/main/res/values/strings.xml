@@ -22,4 +22,6 @@
     <string name="title_activity_edit_item">EditItemActivity</string>
     <string name="title_activity_settings2">SettingsActivity2</string>
     <string name="title_activity_add_item_activitiy">AddItemActivitiy</string>
+    <string name="title_activity_image_info" />
+    <string name="title_activity_barcode_info" />
 </resources>

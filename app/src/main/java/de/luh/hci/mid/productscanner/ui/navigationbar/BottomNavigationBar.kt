@@ -22,6 +22,9 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.File
+import de.luh.hci.mid.productscanner.BuildConfig
+
+private var mediaPlayer: MediaPlayer? = null // Globaler MediaPlayer
 
 @Composable
 fun BottomNavigationBar(
@@ -92,7 +95,7 @@ fun BottomNavigationBar(
 }
 
 suspend fun fetchTTSFromOpenAI(text: String) {
-    val apiKey = "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\n".trim() // Sicherstellen, dass keine Leerzeichen vorhanden sind
+    val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Key aus den BuildConfig-Variablen
     val url = "https://api.openai.com/v1/audio/speech"
     val client = OkHttpClient()
 
@@ -118,25 +121,30 @@ suspend fun fetchTTSFromOpenAI(text: String) {
             if (responseBody != null) {
                 Log.d("OpenAI TTS", "Audio erfolgreich generiert")
 
-                // Nutze MediaPlayer, um den Audio-Stream abzuspielen
-                try {
+                // Falls ein MediaPlayer bereits aktiv ist, stoppen und freigeben
+                mediaPlayer?.apply {
+                    if (isPlaying) {
+                        stop()
+                    }
+                    reset()
+                    release()
+                }
+
+                mediaPlayer = MediaPlayer().apply {
                     val tempFile = File.createTempFile("tts_audio", ".mp3")
                     tempFile.outputStream().use { output ->
                         responseBody.copyTo(output)
                     }
 
-                    val mediaPlayer = MediaPlayer().apply {
-                        setDataSource(tempFile.absolutePath)
-                        prepare()
-                        start()
-                    }
+                    setDataSource(tempFile.absolutePath)
+                    prepare()
+                    start()
 
-                    mediaPlayer.setOnCompletionListener {
-                        mediaPlayer.release()
-                        tempFile.delete() // Lösche die temporäre Datei nach Wiedergabe
+                    setOnCompletionListener {
+                        release()
+                        mediaPlayer = null // MediaPlayer zurücksetzen
+                        tempFile.delete() // Temporäre Datei löschen
                     }
-                } catch (e: Exception) {
-                    Log.e("OpenAI TTS", "Fehler beim Abspielen des Audios: ${e.message}", e)
                 }
             } else {
                 Log.e("OpenAI TTS", "Leere Antwort erhalten")
