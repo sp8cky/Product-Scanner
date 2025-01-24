@@ -1,22 +1,31 @@
 package de.luh.hci.mid.productscanner
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Scale
+import coil.size.Size
+import coil.transform.RoundedCornersTransformation
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
@@ -29,19 +38,29 @@ data class ScannedProduct(
     val imageUrl: String
 )
 
-class DatabaseActivity : ComponentActivity() {
+// Singleton-Klasse zur Verwaltung der Scan-History
+object ScanHistoryManager {
+    val scanHistory = mutableStateListOf<ScannedProduct>()
 
-    // Globale Liste für die Scan History
-    private val scanHistory = mutableStateListOf<ScannedProduct>() // Mutable State List
+    fun addProduct(product: ScannedProduct) {
+        scanHistory.add(product)
+    }
+
+    fun removeProduct(product: ScannedProduct) {
+        scanHistory.remove(product)
+    }
+}
+
+class DatabaseActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             DatabaseScreen(
-                scanHistory = scanHistory,
+                scanHistory = ScanHistoryManager.scanHistory,
                 onProductScanned = { product ->
-                    scanHistory.add(product) // Füge gescanntes Produkt zur History hinzu
+                    ScanHistoryManager.addProduct(product)
                 }
             )
         }
@@ -64,29 +83,42 @@ fun DatabaseScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Anzeige der Scan History
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                items(scanHistory.size) { index ->
-                    val product = scanHistory[index]
-                    EntryItem(
-                        product = product,
-                        onDetailsClicked = {
-                            // Öffne die Detailansicht
-                        },
-                        onDeleteClicked = {
-                            // Entferne das Produkt aus der History
-                            scanHistory.remove(product) // Verwende remove() mit dem Produkt
-                        }
+            if (scanHistory.isEmpty()) {
+                // Nachricht anzeigen, wenn keine Einträge vorhanden sind
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Noch keine Einträge gescannt",
+                        fontSize = 18.sp,
+                        color = Color.Gray
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    items(scanHistory.size) { index ->
+                        val product = scanHistory[index]
+                        EntryItem(
+                            product = product,
+                            onDetailsClicked = {
+                                // Öffne die Detailansicht
+                            },
+                            onDeleteClicked = {
+                                ScanHistoryManager.removeProduct(product)
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun EntryItem(
@@ -98,32 +130,55 @@ fun EntryItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, // Vertikale Zentrierung für die gesamte Zeile
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Bild des Produkts
+        // Produktbild
+        val painter = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(product.imageUrl)
+                .crossfade(true)
+                .scale(Scale.FILL)
+                .size(Size.ORIGINAL)
+                .transformations(RoundedCornersTransformation(8f))
+                .listener(
+                    onStart = { Log.d("Coil", "Bildladen gestartet: ${product.imageUrl}") },
+                    onSuccess = { _, _ -> Log.d("Coil", "Bild erfolgreich geladen: ${product.imageUrl}") },
+                    onError = { _, result -> Log.e("Coil", "Fehler beim Laden des Bildes: ${result.throwable}") }
+                )
+                .build()
+        )
+
         Image(
-            painter = rememberAsyncImagePainter(product.imageUrl),
+            painter = painter,
             contentDescription = "Produktbild",
             modifier = Modifier
                 .size(50.dp)
-                .align(Alignment.CenterVertically)
+                .align(Alignment.CenterVertically) // Zentriert das Bild vertikal in der Zeile
         )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(2.dp))
 
-        // Produktname
+        // Produktname und Barcode
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f) // Nimmt den restlichen Platz ein
+                .align(Alignment.CenterVertically), // Zentriert die Spalte vertikal
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = product.name,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+            Text(
+                text = "Barcode: ${product.id}",
+                fontSize = 14.sp,
+                color = Color.Gray
             )
         }
 
-        // Zwei Buttons
+        // Buttons
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -135,12 +190,14 @@ fun EntryItem(
                     .width(40.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Blue40),
                 shape = RectangleShape,
-                elevation = ButtonDefaults.buttonElevation(0.dp)
+                elevation = ButtonDefaults.buttonElevation(0.dp),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text(
-                    text = "🔍", // Icon für Details
-                    fontSize = 18.sp,
-                    color = Color.White
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = "Details anzeigen",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
@@ -151,12 +208,14 @@ fun EntryItem(
                     .width(40.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Red40),
                 shape = RectangleShape,
-                elevation = ButtonDefaults.buttonElevation(0.dp)
+                elevation = ButtonDefaults.buttonElevation(0.dp),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text(
-                    text = "🗑", // Icon für Löschen
-                    fontSize = 18.sp,
-                    color = Color.White
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Löschen",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
