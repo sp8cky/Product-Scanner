@@ -1,5 +1,6 @@
 package de.luh.hci.mid.productscanner
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -43,7 +44,10 @@ object ScanHistoryManager {
     val scanHistory = mutableStateListOf<ScannedProduct>()
 
     fun addProduct(product: ScannedProduct) {
-        scanHistory.add(product)
+        // Überprüfen, ob ein Produkt mit derselben ID bereits existiert
+        if (scanHistory.none { it.id == product.id }) {
+            scanHistory.add(product)
+        }
     }
 
     fun removeProduct(product: ScannedProduct) {
@@ -73,6 +77,8 @@ fun DatabaseScreen(
     onProductScanned: (ScannedProduct) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current // Lokaler Kontext für den Intent
+
     Scaffold(
         topBar = { TopNavigationBar(title = "Scan-History") },
         bottomBar = { BottomNavigationBar(navController = null) }
@@ -106,7 +112,11 @@ fun DatabaseScreen(
                         EntryItem(
                             product = product,
                             onDetailsClicked = {
-                                // Öffne die Detailansicht
+                                // Intent starten mit Barcode
+                                val intent = Intent(context, BarcodeInfoActivity::class.java).apply {
+                                    putExtra("BARCODE_VALUE", product.id) // Barcode des Produkts
+                                }
+                                context.startActivity(intent)
                             },
                             onDeleteClicked = {
                                 ScanHistoryManager.removeProduct(product)
@@ -118,7 +128,6 @@ fun DatabaseScreen(
         }
     }
 }
-
 
 @Composable
 fun EntryItem(
