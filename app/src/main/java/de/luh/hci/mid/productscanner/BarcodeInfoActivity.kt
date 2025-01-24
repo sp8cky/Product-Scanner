@@ -31,7 +31,6 @@ import java.net.URL
 class BarcodeInfoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val barcodeValue = intent.getStringExtra("BARCODE_VALUE")
 
         setContent {
@@ -55,6 +54,14 @@ class BarcodeInfoActivity : ComponentActivity() {
                             ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
                             productImageUrl = productData["image_url"] as? String ?: ""
                             filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
+
+                            // Produkt zur Scan-History hinzufügen
+                            val newProduct = ScannedProduct(
+                                id = it,
+                                name = productName,
+                                imageUrl = productImageUrl
+                            )
+                            ScanHistoryManager.addProduct(newProduct)
                         } catch (e: Exception) {
                             Log.e("BarcodeInfoActivity", "Error fetching product data", e)
                             productName = "Fehler beim Laden"
@@ -68,6 +75,7 @@ class BarcodeInfoActivity : ComponentActivity() {
                     }
                 }
             }
+
 
             Scaffold(
                 topBar = { TopNavigationBar(title = "Produktdetails") },
