@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.barcode.scanning)
     implementation(libs.androidx.espresso.core)
+    implementation ("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.google.mlkit:barcode-scanning:17.0.2")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
