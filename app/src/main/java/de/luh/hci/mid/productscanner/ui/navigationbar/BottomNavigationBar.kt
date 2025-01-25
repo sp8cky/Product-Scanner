@@ -11,8 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import de.luh.hci.mid.productscanner.MainActivity
+import de.luh.hci.mid.productscanner.SettingsViewModel
 import de.luh.hci.mid.productscanner.currentRoute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,14 +31,17 @@ private var mediaPlayer: MediaPlayer? = null // Globaler MediaPlayer
 @Composable
 fun BottomNavigationBar(
     navController: NavController? = null,
-    onHomeClicked: (() -> Unit)? = null
+    onHomeClicked: (() -> Unit)? = null,
+    settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val selectedVoice by settingsViewModel.selectedVoice.collectAsState()
+    val volumeLevel by settingsViewModel.volumeLevel.collectAsState()
 
     val items = listOf(
-        NavItem("home", "Home", "🏠", MaterialTheme.colorScheme.primary),
-        NavItem("tts", "TTS", "🔊", MaterialTheme.colorScheme.primary)
+        NavItem("home", "Home", "\uD83C\uDFE0", MaterialTheme.colorScheme.primary),
+        NavItem("tts", "TTS", "\uD83D\uDD0A", MaterialTheme.colorScheme.primary)
     )
 
     NavigationBar(
@@ -70,7 +75,11 @@ fun BottomNavigationBar(
                                 "tts" -> "Text-to-Speech aktiviert."
                                 else -> "Kein Text verfügbar."
                             }
-                            fetchTTSFromOpenAI(textToSpeak)
+                            fetchTTSFromOpenAI(
+                                text = textToSpeak,
+                                voice = selectedVoice,
+                                volume = volumeLevel / 100f // Lautstärke wird korrekt übergeben
+                            )
                         }
                     }
                 },
@@ -94,7 +103,7 @@ fun BottomNavigationBar(
     }
 }
 
-suspend fun fetchTTSFromOpenAI(text: String) {
+suspend fun fetchTTSFromOpenAI(text: String, voice: String, volume: Float) {
     val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Key aus den BuildConfig-Variablen
     val url = "https://api.openai.com/v1/audio/speech"
     val client = OkHttpClient()
@@ -102,7 +111,7 @@ suspend fun fetchTTSFromOpenAI(text: String) {
     // JSON-Objekt für die Anfrage erstellen
     val jsonRequest = JSONObject()
     jsonRequest.put("input", text)
-    jsonRequest.put("voice", "alloy") // Beispiel-Stimme
+    jsonRequest.put("voice", voice.lowercase()) // Dynamisch ausgewählte Stimme
     jsonRequest.put("model", "tts-1")
 
     val requestBody = jsonRequest.toString().toRequestBody("application/json".toMediaType())
@@ -138,6 +147,7 @@ suspend fun fetchTTSFromOpenAI(text: String) {
 
                     setDataSource(tempFile.absolutePath)
                     prepare()
+                    setVolume(volume, volume) // Lautstärke einstellen
                     start()
 
                     setOnCompletionListener {
