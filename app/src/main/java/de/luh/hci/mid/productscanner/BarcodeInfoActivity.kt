@@ -21,27 +21,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
-import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.URL
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 
 class BarcodeInfoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val barcodeValue = intent.getStringExtra("BARCODE_VALUE")
+        val filterRepository = FilterRepository(this)
 
         setContent {
             var productName by remember { mutableStateOf("Lade...") }
             var brand by remember { mutableStateOf("Lade...") }
             var ingredients by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf("") }
-            var filters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+            var productFilters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+            var activeFilterOptions by remember { mutableStateOf<List<FilterOption>>(emptyList()) }
             var isExpanded by remember { mutableStateOf(false) }
             var isLoading by remember { mutableStateOf(true) }
             val scope = rememberCoroutineScope()
+
+            // Load active filters from DataStore
+            LaunchedEffect(Unit) {
+                activeFilterOptions = filterRepository.getFilters().filter { it.isActive }
+            }
 
             // Fetch product data
             LaunchedEffect(barcodeValue) {
@@ -53,29 +60,28 @@ class BarcodeInfoActivity : ComponentActivity() {
                             brand = productData["brand"] as? String ?: "Unbekannt"
                             ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
                             productImageUrl = productData["image_url"] as? String ?: ""
-                            filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
+                            productFilters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
 
-                            // Produkt zur Scan-History hinzufügen
                             val newProduct = ScannedProduct(
                                 id = it,
                                 name = productName,
                                 imageUrl = productImageUrl
                             )
                             ScanHistoryManager.addProduct(newProduct)
+
                         } catch (e: Exception) {
                             Log.e("BarcodeInfoActivity", "Error fetching product data", e)
                             productName = "Fehler beim Laden"
                             brand = "Fehler"
                             ingredients = "Fehler"
                             productImageUrl = ""
-                            filters = emptyMap()
+                            productFilters = emptyMap()
                         } finally {
                             isLoading = false
                         }
                     }
                 }
             }
-
 
             Scaffold(
                 topBar = { TopNavigationBar(title = "Produktdetails") },
@@ -94,7 +100,8 @@ class BarcodeInfoActivity : ComponentActivity() {
                         brand = brand,
                         ingredients = ingredients,
                         productImageUrl = productImageUrl,
-                        filters = filters,
+                        productFilters = productFilters,
+                        activeFilterOptions = activeFilterOptions,
                         isExpanded = isExpanded,
                         onExpandToggle = { isExpanded = !isExpanded },
                         modifier = Modifier.padding(padding)
@@ -146,7 +153,8 @@ fun ProductDetailsScreen(
     brand: String,
     ingredients: String,
     productImageUrl: String,
-    filters: Map<String, Boolean>,
+    productFilters: Map<String, Boolean>,
+    activeFilterOptions: List<FilterOption>,
     isExpanded: Boolean,
     onExpandToggle: () -> Unit,
     modifier: Modifier = Modifier
@@ -213,18 +221,21 @@ fun ProductDetailsScreen(
             }
         }
 
-        // Filteranzeige
-        filters.forEach { (label, isActive) ->
+        // Anzeige der aktiven Filter mit Erfüllungsstatus
+        activeFilterOptions.forEach { filterOption ->
             item {
-                FilterItem(label = label, isActive = isActive)
+                val isFulfilled = productFilters[filterOption.label] == true
+                FilterItem(
+                    label = filterOption.label,
+                    isFulfilled = isFulfilled
+                )
             }
         }
     }
 }
 
-
 @Composable
-fun FilterItem(label: String, isActive: Boolean) {
+fun FilterItem(label: String, isFulfilled: Boolean) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -235,10 +246,11 @@ fun FilterItem(label: String, isActive: Boolean) {
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium
         )
-        Checkbox(
-            checked = isActive,
-            onCheckedChange = null,
-            enabled = false
+        Text(
+            text = if (isFulfilled) "✔" else "❌",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isFulfilled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
         )
     }
 }

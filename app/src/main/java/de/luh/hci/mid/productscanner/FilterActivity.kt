@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
@@ -54,7 +56,7 @@ data class FilterOption(
     val isActive: Boolean
 )
 
-class FilterRepository(context: Context) {
+class FilterRepository(private val context: Context) {
 
     private val dataStore = context.dataStore
 
@@ -66,8 +68,8 @@ class FilterRepository(context: Context) {
     private val glutenFreeKey = booleanPreferencesKey("gluten_free")
     private val lactoseFreeKey = booleanPreferencesKey("lactose_free")
 
-    // Filterstatus abrufen
-    val filters = dataStore.data.map { preferences ->
+    // Filterstatus abrufen (Flow)
+    val filters: Flow<List<FilterOption>> = dataStore.data.map { preferences ->
         listOf(
             FilterOption("Vegetarisch", preferences[vegetarianKey] ?: false),
             FilterOption("Vegan", preferences[veganKey] ?: false),
@@ -90,6 +92,11 @@ class FilterRepository(context: Context) {
                 "Milch/Laktosefrei" -> preferences[lactoseFreeKey] = isActive
             }
         }
+    }
+
+    // Direktes Abrufen der Filter für andere Activities
+    suspend fun getFilters(): List<FilterOption> {
+        return filters.first() // Warten auf den ersten Wert aus dem Flow
     }
 }
 
