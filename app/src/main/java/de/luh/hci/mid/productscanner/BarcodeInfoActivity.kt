@@ -240,12 +240,12 @@ fun ProductDetailsScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (isExpanded) "Zutaten: $ingredients"
-                        else "Zutaten: ${ingredients.take(50)}" +
-                                if (!isExpanded && ingredients.length > 50) "..." else "",
+                        else "Zutaten: ${ingredients.take(50)}" + if (ingredients.length > 50) "..." else "",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.primary
                     )
+
                 }
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
