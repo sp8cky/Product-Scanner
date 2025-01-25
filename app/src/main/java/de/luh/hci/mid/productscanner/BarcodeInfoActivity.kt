@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -23,6 +24,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
@@ -39,7 +41,7 @@ class BarcodeInfoActivity : ComponentActivity() {
             var brand by remember { mutableStateOf("Lade...") }
             var ingredients by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf("") }
-            var productFilters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+            var productFilters by remember { mutableStateOf<Map<String, Boolean?>>(emptyMap()) }
             var activeFilterOptions by remember { mutableStateOf<List<FilterOption>>(emptyList()) }
             var isExpanded by remember { mutableStateOf(false) }
             var isLoading by remember { mutableStateOf(true) }
@@ -60,7 +62,12 @@ class BarcodeInfoActivity : ComponentActivity() {
                             brand = productData["brand"] as? String ?: "Unbekannt"
                             ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
                             productImageUrl = productData["image_url"] as? String ?: ""
-                            productFilters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
+                            productFilters = (productData["filters"] as? Map<*, *>)?.mapNotNull { entry ->
+                                val key = entry.key as? String
+                                val value = entry.value as? Boolean?
+                                if (key != null) key to value else null
+                            }?.toMap() ?: emptyMap()
+
 
                             val newProduct = ScannedProduct(
                                 id = it,
@@ -122,16 +129,21 @@ class BarcodeInfoActivity : ComponentActivity() {
             }
 
             val product = json.getJSONObject("product")
-            val filters = mutableMapOf<String, Boolean>()
+            val filters = mutableMapOf<String, Boolean?>()
 
-            product.optJSONArray("ingredients_analysis_tags")?.let { tags ->
-                filters["Vegetarisch"] = tags.toString().contains("en:vegetarian")
-                filters["Vegan"] = tags.toString().contains("en:vegan")
-            }
-            product.optJSONArray("allergens_tags")?.let { tags ->
-                filters["Nussfrei"] = !tags.toString().contains("en:nuts")
-                filters["Laktosefrei"] = !tags.toString().contains("en:milk")
-            }
+            // Analyze ingredients
+            val ingredients = product.optJSONArray("ingredients")
+            val allergensTags = product.optJSONArray("allergens_tags") ?: JSONArray()
+
+            // Determine vegetarian and vegan status
+            filters["Vegetarisch"] = checkIngredientStatus(ingredients, "vegetarian")
+            filters["Vegan"] = checkIngredientStatus(ingredients, "vegan")
+
+            // Check allergens
+            filters["Nussfrei"] = !allergensTags.toString().contains("en:nuts")
+            filters["Sojafrei"] = !allergensTags.toString().contains("en:soybeans")
+            filters["Glutenfrei"] = !allergensTags.toString().contains("en:gluten")
+            filters["Milch/Laktosefrei"] = !allergensTags.toString().contains("en:milk")
 
             mapOf(
                 "name" to product.optString("product_name", "Unbekannt"),
@@ -145,6 +157,28 @@ class BarcodeInfoActivity : ComponentActivity() {
             emptyMap()
         }
     }
+
+    private fun checkIngredientStatus(ingredients: JSONArray?, statusKey: String): Boolean? {
+        if (ingredients == null) return null
+        var hasYes = false
+        var hasMaybe = false
+
+        for (i in 0 until ingredients.length()) {
+            val ingredient = ingredients.optJSONObject(i)
+            if (ingredient != null) {
+                when (ingredient.optString(statusKey)) {
+                    "yes" -> hasYes = true
+                    "maybe" -> hasMaybe = true
+                }
+            }
+        }
+
+        return when {
+            hasYes && !hasMaybe -> true // All ingredients are "yes"
+            hasMaybe -> null           // Uncertainty exists
+            else -> false              // At least one ingredient is not "yes"
+        }
+    }
 }
 
 @Composable
@@ -153,7 +187,7 @@ fun ProductDetailsScreen(
     brand: String,
     ingredients: String,
     productImageUrl: String,
-    productFilters: Map<String, Boolean>,
+    productFilters: Map<String, Boolean?>,
     activeFilterOptions: List<FilterOption>,
     isExpanded: Boolean,
     onExpandToggle: () -> Unit,
@@ -165,7 +199,7 @@ fun ProductDetailsScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Produktbild
+        // Product image
         item {
             Image(
                 painter = rememberAsyncImagePainter(
@@ -180,7 +214,7 @@ fun ProductDetailsScreen(
             )
         }
 
-        // Produktdetails
+        // Product details
         item {
             Text(
                 text = "Name: $productName",
@@ -193,7 +227,7 @@ fun ProductDetailsScreen(
             )
         }
 
-        // Zutaten mit Pfeilen
+        // Ingredients with toggle
         item {
             Row(
                 modifier = Modifier
@@ -221,13 +255,13 @@ fun ProductDetailsScreen(
             }
         }
 
-        // Anzeige der aktiven Filter mit Erfüllungsstatus
+        // Display active filters with status
         activeFilterOptions.forEach { filterOption ->
             item {
-                val isFulfilled = productFilters[filterOption.label] == true
+                val status = productFilters[filterOption.label]
                 FilterItem(
                     label = filterOption.label,
-                    isFulfilled = isFulfilled
+                    status = status
                 )
             }
         }
@@ -235,7 +269,7 @@ fun ProductDetailsScreen(
 }
 
 @Composable
-fun FilterItem(label: String, isFulfilled: Boolean) {
+fun FilterItem(label: String, status: Boolean?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -247,10 +281,18 @@ fun FilterItem(label: String, isFulfilled: Boolean) {
             fontWeight = FontWeight.Medium
         )
         Text(
-            text = if (isFulfilled) "✔" else "❌",
+            text = when (status) {
+                true -> "✔"
+                null -> "?"
+                false -> "❌"
+            },
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = if (isFulfilled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            color = when (status) {
+                true -> Color.Green
+                null -> Color.Gray
+                false -> Color.Red
+            }
         )
     }
 }
