@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -222,7 +223,7 @@ fun ShoppingListItem(
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Search,
+                    imageVector = Icons.Outlined.Edit,
                     contentDescription = "Details anzeigen",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)

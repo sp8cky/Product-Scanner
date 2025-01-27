@@ -1,8 +1,11 @@
 package de.luh.hci.mid.productscanner
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.ComponentActivity.RESULT_OK
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -32,6 +35,8 @@ import java.net.URL
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.theme.Green60
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import de.luh.hci.mid.productscanner.ui.theme.Red40
 
 class BarcodeInfoActivity : ComponentActivity(), TTSContentProvider {
     private var productName by mutableStateOf("Lade...")
@@ -291,6 +296,7 @@ fun ProductDetailsScreen(
                     )
                     ShoppingListManager.addItem(newItem) // Produkt hinzufügen
                 },
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
@@ -304,8 +310,6 @@ fun ProductDetailsScreen(
                 )
             }
         }
-
-
     }
 }
 

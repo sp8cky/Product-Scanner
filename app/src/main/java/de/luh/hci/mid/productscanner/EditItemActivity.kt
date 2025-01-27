@@ -194,6 +194,7 @@ class EditItemActivity : ComponentActivity() , TTSContentProvider{
                             singleLine = true
                         )
                     }
+                    
                     Button(
                         onClick = { productName = "" },
                         modifier = Modifier
@@ -212,6 +213,7 @@ class EditItemActivity : ComponentActivity() , TTSContentProvider{
                         )
                     }
                 }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Spacer(modifier = Modifier.weight(1f))
