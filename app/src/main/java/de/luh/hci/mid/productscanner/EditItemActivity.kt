@@ -11,35 +11,30 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
-import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
-import de.luh.hci.mid.productscanner.ui.theme.Red40
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import de.luh.hci.mid.productscanner.ui.theme.Red40
 
 class EditItemActivity : ComponentActivity() {
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
-    private var isRecording = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,14 +64,11 @@ class EditItemActivity : ComponentActivity() {
     private fun startRecording() {
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 200)
-            android.util.Log.e("AddItemActivity", "Mikrofon-Berechtigung nicht erteilt.")
+            Toast.makeText(this, "Mikrofonberechtigung erforderlich", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Sicherstellen, dass die Datei korrekt erstellt wird
         audioFile = File(cacheDir, "speech.mp3")
-        android.util.Log.i("AddItemActivity", "Audio-Dateipfad: ${audioFile?.absolutePath}")
-
         try {
             mediaRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
@@ -87,9 +79,7 @@ class EditItemActivity : ComponentActivity() {
                 start()
             }
             Toast.makeText(this, "Aufnahme gestartet", Toast.LENGTH_SHORT).show()
-            android.util.Log.i("AddItemActivity", "Aufnahme gestartet, Datei: ${audioFile?.absolutePath}")
         } catch (e: Exception) {
-            android.util.Log.e("AddItemActivity", "Fehler beim Starten der Aufnahme: ${e.message}", e)
             Toast.makeText(this, "Fehler beim Starten der Aufnahme", Toast.LENGTH_LONG).show()
         }
     }
@@ -99,20 +89,15 @@ class EditItemActivity : ComponentActivity() {
             mediaRecorder?.apply {
                 stop()
                 release()
-                android.util.Log.i("AddItemActivity", "Aufnahme erfolgreich gestoppt.")
             }
             mediaRecorder = null
 
-            // Überprüfen, ob die Datei existiert und gültig ist
             if (audioFile?.exists() == true && audioFile?.length() ?: 0 > 0) {
-                android.util.Log.i("AddItemActivity", "Audio-Datei gefunden: ${audioFile?.absolutePath}")
                 sendAudioToWhisper(audioFile!!, onSuccess)
             } else {
-                android.util.Log.e("AddItemActivity", "Fehler: Keine gültige Audiodatei gefunden.")
-                Toast.makeText(this, "Fehler: Keine gültige Audiodatei gefunden.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Keine gültige Audiodatei gefunden", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
-            android.util.Log.e("AddItemActivity", "Fehler beim Stoppen der Aufnahme: ${e.message}", e)
             Toast.makeText(this, "Fehler beim Stoppen der Aufnahme", Toast.LENGTH_LONG).show()
         }
     }
@@ -122,7 +107,11 @@ class EditItemActivity : ComponentActivity() {
         val client = OkHttpClient()
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("file", audioFile.name, audioFile.asRequestBody("audio/mpeg".toMediaTypeOrNull()))
+            .addFormDataPart(
+                "file",
+                audioFile.name,
+                audioFile.asRequestBody("audio/mpeg".toMediaTypeOrNull())
+            )
             .addFormDataPart("model", "whisper-1")
             .addFormDataPart("language", "de")
             .build()
@@ -135,16 +124,18 @@ class EditItemActivity : ComponentActivity() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread { Toast.makeText(this@EditItemActivity, "Fehler bei der Transkription", Toast.LENGTH_SHORT).show() }
+                Toast.makeText(this@EditItemActivity, "Fehler bei der API-Anfrage", Toast.LENGTH_LONG).show()
             }
 
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val jsonResponse = JSONObject(response.body?.string() ?: "")
                     val transcription = jsonResponse.getString("text")
-                    runOnUiThread { onSuccess(transcription) }
+                    runOnUiThread {
+                        onSuccess(transcription)
+                    }
                 } else {
-                    runOnUiThread { Toast.makeText(this@EditItemActivity, "Fehler: ${response.message}", Toast.LENGTH_SHORT).show() }
+                    Toast.makeText(this@EditItemActivity, "Fehler in der API-Antwort", Toast.LENGTH_LONG).show()
                 }
             }
         })
@@ -158,6 +149,7 @@ class EditItemActivity : ComponentActivity() {
         modifier: Modifier = Modifier
     ) {
         var productName by remember { mutableStateOf(initialName) }
+        var isRecording by remember { mutableStateOf(false) }
 
         Scaffold(
             topBar = { TopNavigationBar(title = "Edit Item") },
@@ -169,6 +161,7 @@ class EditItemActivity : ComponentActivity() {
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
+                // Textfeld
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -190,39 +183,21 @@ class EditItemActivity : ComponentActivity() {
                             singleLine = true
                         )
                     }
-                    Button(
-                        onClick = { productName = "" },
-                        modifier = Modifier
-                            .height(40.dp)
-                            .width(40.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Red40),
-                        shape = RectangleShape,
-                        elevation = ButtonDefaults.buttonElevation(0.dp),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Clear,
-                            contentDescription = "Löschen",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Spacer(modifier = Modifier.weight(1f))
+                // Floating Action Button
                 FloatingActionButton(
                     onClick = {
                         if (isRecording) {
                             stopRecording { transcription ->
                                 productName = transcription
-                                isRecording = false // Status korrekt zurücksetzen
-                                android.util.Log.i("AddItemActivity", "Aufnahme gestoppt und verarbeitet.")
+                                isRecording = false
                             }
                         } else {
                             startRecording()
-                            isRecording = true // Status korrekt setzen
-                            android.util.Log.i("AddItemActivity", "Aufnahme gestartet.")
+                            isRecording = true
                         }
                     },
                     modifier = Modifier
@@ -235,12 +210,11 @@ class EditItemActivity : ComponentActivity() {
                         text = if (isRecording) "⏹" else "🎤",
                         fontSize = 32.sp,
                         color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        textAlign = TextAlign.Center
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
 
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
                     modifier = Modifier
@@ -256,8 +230,7 @@ class EditItemActivity : ComponentActivity() {
                         //shape = RectangleShape,
                         elevation = ButtonDefaults.buttonElevation(0.dp)
                     ) {
-                        Text("Speichern",
-                            fontSize = 18.sp,
+                        Text("Speichern",fontSize = 18.sp,
                             color = Color.White,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth(),)
@@ -271,8 +244,7 @@ class EditItemActivity : ComponentActivity() {
                         //shape = RectangleShape,
                         elevation = ButtonDefaults.buttonElevation(0.dp)
                     ) {
-                        Text("Abbrechen",
-                            fontSize = 18.sp,
+                        Text("Abbrechen", fontSize = 18.sp,
                             color = Color.White,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth())
