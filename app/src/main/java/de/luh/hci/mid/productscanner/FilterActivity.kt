@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,12 +23,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import kotlinx.coroutines.runBlocking
 
 // DataStore für Kontext
 private val Context.dataStore by preferencesDataStore("filter_preferences")
 
-class FilterActivity : ComponentActivity() {
+class FilterActivity : ComponentActivity() , TTSContentProvider {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +40,7 @@ class FilterActivity : ComponentActivity() {
         setContent {
             val filters = filterRepository.filters.collectAsState(initial = emptyList())
             val scope = rememberCoroutineScope()
+
 
             FilterScreen(
                 filters = filters.value,
@@ -49,6 +53,17 @@ class FilterActivity : ComponentActivity() {
             )
         }
     }
+    override fun getTTSContent(): String {
+        val activeFilters = runBlocking { FilterRepository(this@FilterActivity).getFilters().filter { it.isActive } }
+
+        return if (activeFilters.isEmpty()) {
+            "Du befindest dich in der Filterübersicht. Aktuell sind keine Filter aktiviert. Um einen Filter zu aktivieren oder zu deaktivieren, betätige den Togglebutton."
+        } else {
+            val filterList = activeFilters.joinToString(", ") { it.label }
+            "Du befindest dich in der Filterübersicht. Aktuell sind folgende Filter aktiviert: $filterList. Um einen Filter zu aktivieren oder zu deaktivieren, betätige den Togglebutton."
+        }
+    }
+
 }
 
 data class FilterOption(
@@ -109,7 +124,7 @@ fun FilterScreen(
 ) {
     Scaffold(
         topBar = { TopNavigationBar(title = "Filter") },
-        bottomBar = { BottomNavigationBar(navController = null) }
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { paddingValues ->
         Column(
             modifier = modifier

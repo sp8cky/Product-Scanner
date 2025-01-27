@@ -29,12 +29,17 @@ import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import java.io.File
 
-class ScanActivity : ComponentActivity() {
+class ScanActivity : ComponentActivity(), TTSContentProvider {
     private var isInfoActivityOpened = false // Flag, um doppelte Navigation zu vermeiden
     private lateinit var cameraProvider: ProcessCameraProvider
+
+    override fun getTTSContent(): String {
+        return "Richten Sie die Kamera auf einen Barcode, um ihn automatisch zu scannen. Alternativ können Sie ein Foto aufnehmen, um zusätzliche Informationen aus dem Bild zu extrahieren."
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +107,7 @@ fun ScanScreen(
 
     Scaffold(
         topBar = { TopNavigationBar(title = "Scan") },
-        bottomBar = { BottomNavigationBar(navController = null) }
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { padding ->
         Column(
             modifier = Modifier
