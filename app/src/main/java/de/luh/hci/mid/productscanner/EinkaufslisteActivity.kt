@@ -26,7 +26,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.luh.hci.mid.productscanner.ShoppingListManager.shoppingList
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.theme.Green60
@@ -51,9 +53,24 @@ object ShoppingListManager {
     }
 }
 
-class EinkaufslisteActivity : ComponentActivity() {
+class EinkaufslisteActivity : ComponentActivity(), TTSContentProvider {
     private lateinit var addItemLauncher: ActivityResultLauncher<Intent>
     private lateinit var editItemLauncher: ActivityResultLauncher<Intent>
+
+    override fun getTTSContent(): String {
+        val shoppingListNames = shoppingList.joinToString(", ") { it.name }
+
+        return if (shoppingList.isEmpty()) {
+            "Deine Einkaufsliste ist momentan leer. Über den grünen Plus-Button unten kannst du ein neues Produkt hinzufügen."
+        } else {
+            "Du befindest dich in der Einkaufsliste. Deine aktuellen Produkte sind: $shoppingListNames. " +
+                    "Über das blaue Lupensymbol kannst du weitere Produktinfos aufrufen, " +
+                    "über das rote Löschsymbol kannst du das Produkt aus der Liste löschen." +
+                    " Über den grünen Plus-Button unten kannst du ein neues Produkt hinzufügen."
+        }
+    }
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,7 +131,7 @@ fun EinkaufslisteScreen(
 ) {
     Scaffold(
         topBar = { TopNavigationBar(title = "Einkaufsliste") },
-        bottomBar = { BottomNavigationBar(navController = null) }
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { paddingValues ->
         Column(
             modifier = modifier

@@ -28,6 +28,7 @@ import coil.size.Scale
 import coil.size.Size
 import coil.transform.RoundedCornersTransformation
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 import de.luh.hci.mid.productscanner.ui.theme.Red40
@@ -55,7 +56,7 @@ object ScanHistoryManager {
     }
 }
 
-class DatabaseActivity : ComponentActivity() {
+class DatabaseActivity : ComponentActivity(), TTSContentProvider {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,7 +70,29 @@ class DatabaseActivity : ComponentActivity() {
             )
         }
     }
+
+    override fun getTTSContent(): String {
+        val recentProducts = ScanHistoryManager.scanHistory.takeLast(5).map { it.name }
+
+        return if (recentProducts.isEmpty()) {
+            "Du befindest dich im Scanverlauf. Es wurden noch keine Produkte gescannt. " +
+                    "Scanne ein Produkt, um es hier anzuzeigen."
+        } else {
+            val productList = when (recentProducts.size) {
+                1 -> recentProducts.first() // Nur ein Produkt
+                2 -> recentProducts.joinToString(" und ") // Zwei Produkte
+                else -> recentProducts.dropLast(1).joinToString(", ") + " und " + recentProducts.last() // Mehr als zwei Produkte
+            }
+
+            val productCount = recentProducts.size // Korrekte Anzahl der Produkte
+            "Du befindest dich im Scanverlauf. Die letzten $productCount gescannten Produkte waren: $productList. " +
+                    "Über das blaue Lupensymbol kannst du weitere Produktinfos aufrufen, über das rote Löschsymbol kannst du das Produkt aus der Liste löschen."
+        }
+    }
+
+
 }
+
 
 @Composable
 fun DatabaseScreen(
@@ -81,7 +104,7 @@ fun DatabaseScreen(
 
     Scaffold(
         topBar = { TopNavigationBar(title = "Scan-History") },
-        bottomBar = { BottomNavigationBar(navController = null) }
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { paddingValues ->
         Column(
             modifier = modifier

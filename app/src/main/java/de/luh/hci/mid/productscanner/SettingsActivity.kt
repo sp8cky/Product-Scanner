@@ -12,14 +12,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 
-class SettingsActivity : ComponentActivity() {
+class SettingsActivity : ComponentActivity() , TTSContentProvider {
     private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +30,10 @@ class SettingsActivity : ComponentActivity() {
         setContent {
             SettingsScreen(viewModel = settingsViewModel)
         }
+    }
+
+    override fun getTTSContent(): String {
+        return "Du befindest dich in den Einstellungen. Du kannst die TTS-Sprache und Lautstärke ändern und die Datenschutzrichtlinien bzw. dir Infos über die App ansehen."
     }
 }
 
@@ -38,7 +44,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 
     Scaffold(
         topBar = { TopNavigationBar(title = "Einstellungen") },
-        bottomBar = { BottomNavigationBar(navController = null) }
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { paddingValues ->
         Column(
             modifier = Modifier

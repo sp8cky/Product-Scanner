@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,11 +34,12 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Green60
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 
-class AddItemActivitiy : ComponentActivity() {
+class AddItemActivitiy : ComponentActivity(), TTSContentProvider {
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
 
@@ -60,6 +62,14 @@ class AddItemActivitiy : ComponentActivity() {
             )
         }
     }
+
+
+    override fun getTTSContent(): String {
+        return "Du befindest dich in der Einkaufliste-Produkt-Hinzufügen übersicht." +
+                " Du kannst über das Textfeld oder den Mikrofon-Button per Audio ein Produkt hinzufügen und über den grünen Hinzufügen-Button bestätigen." +
+                " Mit dem roten X-Button kannst du die Eingabe löschen, über den grauen Abbrechen-Button kommst du zur Einkaufsliste zurück."
+    }
+
     private fun startRecording() {
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 200)
@@ -172,7 +182,7 @@ class AddItemActivitiy : ComponentActivity() {
 
         Scaffold(
             topBar = { TopNavigationBar(title = "Add Item") },
-            bottomBar = { BottomNavigationBar(navController = null) }
+            bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
         ) { paddingValues ->
             Column(
                 modifier = modifier

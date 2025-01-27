@@ -23,9 +23,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import de.luh.hci.mid.productscanner.ui.theme.ProductscannerTheme
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), TTSContentProvider {
+    override fun getTTSContent(): String {
+        return "Willkommen auf der Startseite. Bitte wählen Sie eine Aktion aus."
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -51,9 +55,8 @@ fun MainScreen() {
                 else -> "App"
             })
         },
-        bottomBar = {
-            BottomNavigationBar(navController)
-        }
+
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { innerPadding ->
         NavHost(
             navController = navController,

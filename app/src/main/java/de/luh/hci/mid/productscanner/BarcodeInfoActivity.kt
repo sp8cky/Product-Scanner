@@ -26,28 +26,44 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
-import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.theme.Green60
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 
-class BarcodeInfoActivity : ComponentActivity() {
+class BarcodeInfoActivity : ComponentActivity(), TTSContentProvider {
+    private var productName by mutableStateOf("Lade...")
+    private var brand by mutableStateOf("Lade...")
+    private var ingredients by mutableStateOf("Lade...")
+    private var productFilters by mutableStateOf<Map<String, Boolean?>>(emptyMap())
+
+    override fun getTTSContent(): String {
+        val filterDescriptions = productFilters.entries
+            .filter { it.value == true }
+            .joinToString { it.key }
+
+        val filterText = if (filterDescriptions.isEmpty()) {
+            "keine aktiven Filter."
+        } else {
+            "die Filter $filterDescriptions."
+        }
+
+        return "Du hast folgendes Produkt gescannt: $productName von $brand. Das Produkt erfüllt $filterText . Die Zutaten sind $ingredients."
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val barcodeValue = intent.getStringExtra("BARCODE_VALUE")
         val filterRepository = FilterRepository(this)
 
         setContent {
-            var productName by remember { mutableStateOf("Lade...") }
-            var brand by remember { mutableStateOf("Lade...") }
-            var ingredients by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf("") }
-            var productFilters by remember { mutableStateOf<Map<String, Boolean?>>(emptyMap()) }
             var activeFilterOptions by remember { mutableStateOf<List<FilterOption>>(emptyList()) }
             var isExpanded by remember { mutableStateOf(false) }
             var isLoading by remember { mutableStateOf(true) }
@@ -74,7 +90,6 @@ class BarcodeInfoActivity : ComponentActivity() {
                                 if (key != null) key to value else null
                             }?.toMap() ?: emptyMap()
 
-
                             val newProduct = ScannedProduct(
                                 id = it,
                                 name = productName,
@@ -98,7 +113,7 @@ class BarcodeInfoActivity : ComponentActivity() {
 
             Scaffold(
                 topBar = { TopNavigationBar(title = "Produktdetails") },
-                bottomBar = { BottomNavigationBar(navController = null) }
+                bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = this@BarcodeInfoActivity) }
             ) { padding ->
                 if (isLoading) {
                     Box(
@@ -280,7 +295,8 @@ fun ProductDetailsScreen(
                         name = productName
                     )
                     ShoppingListManager.addItem(newItem) // Produkt hinzufügen
-},
+                },
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
@@ -294,9 +310,6 @@ fun ProductDetailsScreen(
                 )
             }
         }
-
-
-
     }
 }
 

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,7 +35,12 @@ import org.json.JSONObject
 import java.io.File
 import java.net.URL
 
-class InfoActivity : ComponentActivity() {
+class InfoActivity : ComponentActivity() , TTSContentProvider {
+
+    override fun getTTSContent(): String {
+        return "InfoActivity."
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -92,7 +98,7 @@ class InfoActivity : ComponentActivity() {
 
             Scaffold(
                 topBar = { TopNavigationBar(title = "Info") },
-                bottomBar = { BottomNavigationBar(navController = null) }
+                bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
             ) { padding ->
                 InfoScreen(
                     barcode = barcodeValue,

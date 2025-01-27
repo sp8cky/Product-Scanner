@@ -27,12 +27,12 @@ import java.io.File
 import de.luh.hci.mid.productscanner.BuildConfig
 
 private var mediaPlayer: MediaPlayer? = null // Globaler MediaPlayer
-
 @Composable
 fun BottomNavigationBar(
     navController: NavController? = null,
     onHomeClicked: (() -> Unit)? = null,
-    settingsViewModel: SettingsViewModel = viewModel()
+    settingsViewModel: SettingsViewModel = viewModel(),
+    ttsContentProvider: TTSContentProvider // Neuer Parameter für TTS-Daten
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -54,6 +54,7 @@ fun BottomNavigationBar(
                 selected = currentRoute == item.route,
                 onClick = {
                     if (item.route == "home") {
+                        // Navigation zur Home-Activity
                         if (navController == null) {
                             onHomeClicked?.invoke() ?: run {
                                 val intent = Intent(context, MainActivity::class.java)
@@ -68,17 +69,13 @@ fun BottomNavigationBar(
                             }
                         }
                     } else if (item.route == "tts") {
+                        // Dynamischer TTS-Text von der aktuellen Activity
+                        val ttsContent = ttsContentProvider.getTTSContent()
                         scope.launch(Dispatchers.IO) {
-                            val textToSpeak = when (currentRoute) {
-                                "home" -> "Willkommen auf der Startseite. Bitte wählen Sie eine Aktion."
-                                "scan" -> "Hier können Sie einen Barcode scannen."
-                                "tts" -> "Text-to-Speech aktiviert."
-                                else -> "Kein Text verfügbar."
-                            }
                             fetchTTSFromOpenAI(
-                                text = textToSpeak,
+                                text = ttsContent,
                                 voice = selectedVoice,
-                                volume = volumeLevel / 100f // Lautstärke wird korrekt übergeben
+                                volume = volumeLevel / 100f
                             )
                         }
                     }
@@ -102,6 +99,7 @@ fun BottomNavigationBar(
         }
     }
 }
+
 
 suspend fun fetchTTSFromOpenAI(text: String, voice: String, volume: Float) {
     val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Key aus den BuildConfig-Variablen

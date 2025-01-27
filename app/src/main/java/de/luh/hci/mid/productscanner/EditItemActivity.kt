@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,11 +33,12 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Green60
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 
-class EditItemActivity : ComponentActivity() {
+class EditItemActivity : ComponentActivity() , TTSContentProvider{
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
 
@@ -63,6 +65,11 @@ class EditItemActivity : ComponentActivity() {
                 }
             )
         }
+    }
+    override fun getTTSContent(): String {
+        return "Du befindest dich in der Einkaufsliste-Produkt-bearbeiten übersicht." +
+                " Du kannst über das Textfeld oder den Mikrofon-Button per Audio das Produkt bearbeiten und über den grünen Speichern-Button bestätigen." +
+                " Mit dem roten X-Button kannst du die Eingabe löschen, über den grauen Abbrechen-Button kommst du zur Einkaufsliste zurück"
     }
 
     private fun startRecording() {
@@ -157,7 +164,7 @@ class EditItemActivity : ComponentActivity() {
 
         Scaffold(
             topBar = { TopNavigationBar(title = "Edit Item") },
-            bottomBar = { BottomNavigationBar(navController = null) }
+            bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
         ) { paddingValues ->
             Column(
                 modifier = modifier
@@ -187,7 +194,7 @@ class EditItemActivity : ComponentActivity() {
                             singleLine = true
                         )
                     }
-
+                    
                     Button(
                         onClick = { productName = "" },
                         modifier = Modifier
