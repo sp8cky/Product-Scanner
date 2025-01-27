@@ -1,13 +1,12 @@
 package de.luh.hci.mid.productscanner
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Search
@@ -19,15 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import coil.size.Scale
-import coil.size.Size
-import coil.transform.RoundedCornersTransformation
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
@@ -83,45 +76,22 @@ fun EinkaufslisteScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            LazyColumn(
+            // Scrollable Liste mit Overlay-Indikatoren
+            Box(
                 modifier = Modifier
+                    .weight(1f) // Füllt den verbleibenden Platz
                     .fillMaxWidth()
-                    .weight(1f)
             ) {
-                if (shoppingList.isEmpty()) {
-                    // Nachricht anzeigen, wenn keine Einträge vorhanden sind
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Noch keine Einträge vorhanden",
-                                fontSize = 18.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                } else {
-                    items(shoppingList.size) { index ->
-                        val item = shoppingList[index]
-                        ShoppingListItem(
-                            item = item,
-                            onDeleteClicked = {
-                                ShoppingListManager.removeItem(item)
-                            },
-                            onDetailsClicked = {
-                                // Details-Logik hier einfügen
-                                Log.d("Einkaufsliste", "Details für ${item.name} anzeigen")
-                            }
-                        )
-                    }
-                }
+                OverlayScrollIndicator(
+                    shoppingList = shoppingList,
+                    onDeleteClicked = { item -> ShoppingListManager.removeItem(item) },
+                    onDetailsClicked = { item -> Log.d("Einkaufsliste", "Details für ${item.name} anzeigen") }
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // "+"-Button immer am unteren Ende
+            // "+"-Button am unteren Ende
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -170,11 +140,10 @@ fun ShoppingListItem(
     ) {
         Column(
             modifier = Modifier
-                .weight(1f) // Nimmt den restlichen Platz ein
-                .align(Alignment.CenterVertically), // Zentriert die Spalte vertikal
+                .weight(1f)
+                .align(Alignment.CenterVertically),
             verticalArrangement = Arrangement.Center
         ) {
-            // Eintragsnummer und Name
             Text(
                 text = "#${item.id} - ${item.name}",
                 fontSize = 18.sp,
@@ -204,7 +173,9 @@ fun ShoppingListItem(
                 )
             }
         }
-        Spacer(modifier = Modifier.width(8.dp)) // Kleiner Abstand zwischen den Buttons
+
+        Spacer(modifier = Modifier.width(8.dp))
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -226,6 +197,54 @@ fun ShoppingListItem(
                     modifier = Modifier.size(24.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun OverlayScrollIndicator(
+    shoppingList: SnapshotStateList<ShoppingItem>,
+    onDeleteClicked: (ShoppingItem) -> Unit,
+    onDetailsClicked: (ShoppingItem) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(shoppingList.size) { index ->
+                val item = shoppingList[index]
+                ShoppingListItem(
+                    item = item,
+                    onDeleteClicked = { onDeleteClicked(item) },
+                    onDetailsClicked = { onDetailsClicked(item) }
+                )
+            }
+        }
+
+        if (listState.canScrollForward) {
+            Text(
+                text = "Scroll for more",
+                color = Color.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
+            )
+        }
+
+        if (listState.canScrollBackward) {
+            Text(
+                text = "Scroll up",
+                color = Color.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+            )
         }
     }
 }
