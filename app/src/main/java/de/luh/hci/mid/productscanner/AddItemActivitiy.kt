@@ -267,7 +267,7 @@ class AddItemActivitiy : ComponentActivity() {
                             .weight(1f)
                             .height(60.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Red40),
-                        shape = RectangleShape,
+                        //shape = RectangleShape,
                         elevation = ButtonDefaults.buttonElevation(0.dp)
                     ) {
                         Text(
@@ -284,7 +284,7 @@ class AddItemActivitiy : ComponentActivity() {
                             .weight(1f)
                             .height(60.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
-                        shape = RectangleShape,
+                        //shape = RectangleShape,
                         elevation = ButtonDefaults.buttonElevation(0.dp)
                     ) {
                         Text(

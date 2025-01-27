@@ -69,33 +69,52 @@ class EditItemActivity : ComponentActivity() {
     private fun startRecording() {
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 200)
+            android.util.Log.e("AddItemActivity", "Mikrofon-Berechtigung nicht erteilt.")
             return
         }
 
-        audioFile = File(cacheDir, "speech_edit.mp3")
-        mediaRecorder = MediaRecorder().apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile(audioFile?.absolutePath)
-            prepare()
-            start()
+        // Sicherstellen, dass die Datei korrekt erstellt wird
+        audioFile = File(cacheDir, "speech.mp3")
+        android.util.Log.i("AddItemActivity", "Audio-Dateipfad: ${audioFile?.absolutePath}")
+
+        try {
+            mediaRecorder = MediaRecorder().apply {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setOutputFile(audioFile?.absolutePath)
+                prepare()
+                start()
+            }
+            Toast.makeText(this, "Aufnahme gestartet", Toast.LENGTH_SHORT).show()
+            android.util.Log.i("AddItemActivity", "Aufnahme gestartet, Datei: ${audioFile?.absolutePath}")
+        } catch (e: Exception) {
+            android.util.Log.e("AddItemActivity", "Fehler beim Starten der Aufnahme: ${e.message}", e)
+            Toast.makeText(this, "Fehler beim Starten der Aufnahme", Toast.LENGTH_LONG).show()
         }
-        isRecording = true
-        Toast.makeText(this, "Aufnahme gestartet", Toast.LENGTH_SHORT).show()
     }
 
     private fun stopRecording(onSuccess: (String) -> Unit) {
-        mediaRecorder?.apply {
-            stop()
-            release()
-        }
-        isRecording = false
-        mediaRecorder = null
+        try {
+            mediaRecorder?.apply {
+                stop()
+                release()
+                android.util.Log.i("AddItemActivity", "Aufnahme erfolgreich gestoppt.")
+            }
+            mediaRecorder = null
 
-        audioFile?.let { file ->
-            sendAudioToWhisper(file, onSuccess)
-        } ?: Toast.makeText(this, "Keine gültige Audiodatei gefunden", Toast.LENGTH_LONG).show()
+            // Überprüfen, ob die Datei existiert und gültig ist
+            if (audioFile?.exists() == true && audioFile?.length() ?: 0 > 0) {
+                android.util.Log.i("AddItemActivity", "Audio-Datei gefunden: ${audioFile?.absolutePath}")
+                sendAudioToWhisper(audioFile!!, onSuccess)
+            } else {
+                android.util.Log.e("AddItemActivity", "Fehler: Keine gültige Audiodatei gefunden.")
+                Toast.makeText(this, "Fehler: Keine gültige Audiodatei gefunden.", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AddItemActivity", "Fehler beim Stoppen der Aufnahme: ${e.message}", e)
+            Toast.makeText(this, "Fehler beim Stoppen der Aufnahme", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun sendAudioToWhisper(audioFile: File, onSuccess: (String) -> Unit) {
@@ -171,10 +190,27 @@ class EditItemActivity : ComponentActivity() {
                             singleLine = true
                         )
                     }
+                    Button(
+                        onClick = { productName = "" },
+                        modifier = Modifier
+                            .height(40.dp)
+                            .width(40.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Red40),
+                        shape = RectangleShape,
+                        elevation = ButtonDefaults.buttonElevation(0.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Clear,
+                            contentDescription = "Löschen",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
+                Spacer(modifier = Modifier.weight(1f))
                 FloatingActionButton(
                     onClick = {
                         if (isRecording) {
@@ -205,23 +241,41 @@ class EditItemActivity : ComponentActivity() {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
+
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Button(
                         onClick = { onSaveClicked(productName) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Red40)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Red40),
+                        //shape = RectangleShape,
+                        elevation = ButtonDefaults.buttonElevation(0.dp)
                     ) {
-                        Text("Speichern", color = Color.White)
+                        Text("Speichern",
+                            fontSize = 18.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),)
                     }
                     Button(
                         onClick = onCancelClicked,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(60.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                        //shape = RectangleShape,
+                        elevation = ButtonDefaults.buttonElevation(0.dp)
                     ) {
-                        Text("Abbrechen", color = Color.White)
+                        Text("Abbrechen",
+                            fontSize = 18.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
