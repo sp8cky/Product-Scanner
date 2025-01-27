@@ -131,6 +131,7 @@ suspend fun fetchTTSFromOpenAI(text: String, voice: String, volume: Float) {
                 // Falls ein MediaPlayer bereits aktiv ist, stoppen und freigeben
                 mediaPlayer?.apply {
                     if (isPlaying) {
+                        Log.d("MediaPlayer", "Vorherige TTS-Ausgabe wird gestoppt.")
                         stop()
                     }
                     reset()
@@ -149,9 +150,18 @@ suspend fun fetchTTSFromOpenAI(text: String, voice: String, volume: Float) {
                     start()
 
                     setOnCompletionListener {
+                        Log.d("MediaPlayer", "TTS-Wiedergabe abgeschlossen.")
                         release()
                         mediaPlayer = null // MediaPlayer zurücksetzen
                         tempFile.delete() // Temporäre Datei löschen
+                    }
+
+                    setOnErrorListener { _, what, extra ->
+                        Log.e("MediaPlayer", "Fehler während der Wiedergabe: what=$what, extra=$extra")
+                        release()
+                        mediaPlayer = null
+                        tempFile.delete()
+                        true
                     }
                 }
             } else {
@@ -164,3 +174,4 @@ suspend fun fetchTTSFromOpenAI(text: String, voice: String, volume: Float) {
         Log.e("OpenAI TTS", "Fehler beim Abrufen der TTS-Daten: ${e.message}", e)
     }
 }
+
