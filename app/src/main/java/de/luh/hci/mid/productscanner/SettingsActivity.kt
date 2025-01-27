@@ -46,28 +46,26 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         topBar = { TopNavigationBar(title = "Einstellungen") },
         bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { paddingValues ->
-        Column(
+        LazyColumn( // Ersetzt die äußere Column durch LazyColumn für Scrollfunktionalität
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Einstellungen
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            item {
                 // Voice-Auswahl
                 VoiceSetting(viewModel)
+            }
 
+            item {
                 // Lautstärke-Einstellung
                 VolumeSetting(viewModel)
+            }
 
+            item {
                 // Datenschutzrichtlinie
                 Button(
                     onClick = { showPrivacyDialog = true },
@@ -80,9 +78,13 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
 
+            item {
                 Spacer(modifier = Modifier.height(16.dp))
+            }
 
+            item {
                 // Info-Bereich
                 Button(
                     onClick = { showInfoDialog = true },
@@ -99,113 +101,116 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 
             // Datenschutzrichtlinie-Dialog
             if (showPrivacyDialog) {
-                AlertDialog(
-                    onDismissRequest = { showPrivacyDialog = false },
-                    confirmButton = {
-                        TextButton(onClick = { showPrivacyDialog = false }) {
-                            Text("OK", fontWeight = FontWeight.Bold)
-                        }
-                    },
-                    title = { Text("Datenschutzrichtlinie") },
-                    text = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 300.dp) // Setzt eine maximale Höhe für den scrollbaren Bereich
-                        ) {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxWidth()
+                item {
+                    AlertDialog(
+                        onDismissRequest = { showPrivacyDialog = false },
+                        confirmButton = {
+                            TextButton(onClick = { showPrivacyDialog = false }) {
+                                Text("OK", fontWeight = FontWeight.Bold)
+                            }
+                        },
+                        title = { Text("Datenschutzrichtlinie") },
+                        text = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 300.dp) // Setzt eine maximale Höhe für den scrollbaren Bereich
                             ) {
-                                item {
-                                    Text(
-                                        "Wir nehmen den Schutz Ihrer Daten ernst. Hier erfahren Sie, wie Ihre Daten in der App verarbeitet werden:\n",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                                item {
-                                    Text(
-                                        "- Barcode-Scanning: Barcodes werden an die Datenbank Open Food Facts gesendet, um Produktinformationen abzurufen. Es werden keine Daten dauerhaft gespeichert.\n",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                                item {
-                                    Text(
-                                        "- Bildersuche: Aufgenommene Bilder werden an OpenAI gesendet, um passende Produkte zu finden. Die Bilder werden nach der Verarbeitung gelöscht.\n",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                                item {
-                                    Text(
-                                        "- Sprachausgabe (TTS): Produktinformationen werden an OpenAI (ChatGPT) gesendet, um Sprache zu generieren. Diese Daten werden nur temporär verarbeitet.\n",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                                item {
-                                    Text(
-                                        "Ihre Daten werden nur für die Bereitstellung der Funktionen genutzt und niemals dauerhaft gespeichert oder ohne Grund an Dritte weitergegeben.",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    item {
+                                        Text(
+                                            "Wir nehmen den Schutz Ihrer Daten ernst. Hier erfahren Sie, wie Ihre Daten in der App verarbeitet werden:\n",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    item {
+                                        Text(
+                                            "- Barcode-Scanning: Barcodes werden an die Datenbank Open Food Facts gesendet, um Produktinformationen abzurufen. Es werden keine Daten dauerhaft gespeichert.\n",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    item {
+                                        Text(
+                                            "- Bildersuche: Aufgenommene Bilder werden an OpenAI gesendet, um passende Produkte zu finden. Die Bilder werden nach der Verarbeitung gelöscht.\n",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    item {
+                                        Text(
+                                            "- Sprachausgabe (TTS): Produktinformationen werden an OpenAI (ChatGPT) gesendet, um Sprache zu generieren. Diese Daten werden nur temporär verarbeitet.\n",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    item {
+                                        Text(
+                                            "Ihre Daten werden nur für die Bereitstellung der Funktionen genutzt und niemals dauerhaft gespeichert oder ohne Grund an Dritte weitergegeben.",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
 
             // Info-Bereich-Dialog
             if (showInfoDialog) {
-                AlertDialog(
-                    onDismissRequest = { showInfoDialog = false },
-                    confirmButton = {
-                        TextButton(onClick = { showInfoDialog = false }) {
-                            Text("OK", fontWeight = FontWeight.Bold)
-                        }
-                    },
-                    title = { Text("Info über die App") },
-                    text = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 300.dp) // Setzt eine maximale Höhe für den scrollbaren Bereich
-                        ) {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxWidth()
+                item {
+                    AlertDialog(
+                        onDismissRequest = { showInfoDialog = false },
+                        confirmButton = {
+                            TextButton(onClick = { showInfoDialog = false }) {
+                                Text("OK", fontWeight = FontWeight.Bold)
+                            }
+                        },
+                        title = { Text("Info über die App") },
+                        text = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 300.dp) // Setzt eine maximale Höhe für den scrollbaren Bereich
                             ) {
-                                item {
-                                    Text(
-                                        "Produkt Scanner v1.0\n\n",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                item {
-                                    Text(
-                                        "Entwickler: Emin Bayhan, Julia Hermerding\n",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                                item {
-                                    Text(
-                                        "Funktionen:\n",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                item {
-                                    Text(
-                                        "- Barcode-Scanner: Echtzeit-Produktsuche mit Inhaltsstoffanalyse.\n" +
-                                                "- Sprachausgabe (TTS): Barrierefreier Zugang zu Produktinformationen.\n" +
-                                                "- Filter: Sortierung nach vegan, vegetarisch, allergenfrei.\n" +
-                                                "- Einkaufsliste: Erstellen von einer Einkaufsliste.",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    item {
+                                        Text(
+                                            "Produkt Scanner v1.0\n\n",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    item {
+                                        Text(
+                                            "Entwickler: Emin Bayhan, Julia Hermerding\n",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    item {
+                                        Text(
+                                            "Funktionen:\n",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    item {
+                                        Text(
+                                            "- Barcode-Scanner: Echtzeit-Produktsuche mit Inhaltsstoffanalyse.\n" +
+                                                    "- Sprachausgabe (TTS): Barrierefreier Zugang zu Produktinformationen.\n" +
+                                                    "- Filter: Sortierung nach vegan, vegetarisch, allergenfrei.\n" +
+                                                    "- Einkaufsliste: Erstellen von einer Einkaufsliste.",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
-
         }
     }
 }

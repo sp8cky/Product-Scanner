@@ -5,6 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -126,35 +128,27 @@ fun FilterScreen(
         topBar = { TopNavigationBar(title = "Filter") },
         bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Filterliste mit Toggles
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                filters.forEach { filter ->
-                    SettingItem(
-                        label = filter.label,
-                        isChecked = filter.isActive,
-                        onCheckedChange = { isChecked ->
-                            onFilterToggled(filter.label, isChecked)
-                        }
-                    )
-                }
+            items(filters) { filter ->
+                SettingItem(
+                    label = filter.label,
+                    isChecked = filter.isActive,
+                    onCheckedChange = { isChecked ->
+                        onFilterToggled(filter.label, isChecked)
+                    }
+                )
             }
         }
     }
 }
+
 
 @Composable
 fun SettingItem(label: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
