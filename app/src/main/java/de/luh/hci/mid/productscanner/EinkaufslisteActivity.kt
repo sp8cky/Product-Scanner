@@ -1,8 +1,11 @@
 package de.luh.hci.mid.productscanner
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,14 +49,29 @@ object ShoppingListManager {
 }
 
 class EinkaufslisteActivity : ComponentActivity() {
+    private lateinit var addItemLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Launcher zur Handhabung des Ergebnisses der AddItemActivity
+        addItemLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val newItemName = result.data?.getStringExtra("item_name") ?: return@registerForActivityResult
+                val newItem = ShoppingItem(
+                    id = ShoppingListManager.shoppingList.size + 1,
+                    name = newItemName
+                )
+                ShoppingListManager.addItem(newItem)
+            }
+        }
 
         setContent {
             EinkaufslisteScreen(
                 shoppingList = ShoppingListManager.shoppingList,
-                onItemAdded = { item ->
-                    ShoppingListManager.addItem(item)
+                onAddItemClicked = {
+                    val intent = Intent(this, AddItemActivitiy::class.java)
+                    addItemLauncher.launch(intent)
                 }
             )
         }
@@ -63,7 +81,7 @@ class EinkaufslisteActivity : ComponentActivity() {
 @Composable
 fun EinkaufslisteScreen(
     shoppingList: SnapshotStateList<ShoppingItem>,
-    onItemAdded: (ShoppingItem) -> Unit,
+    onAddItemClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -79,7 +97,7 @@ fun EinkaufslisteScreen(
             // Scrollable Liste mit Overlay-Indikatoren
             Box(
                 modifier = Modifier
-                    .weight(1f) // Füllt den verbleibenden Platz
+                    .weight(1f)
                     .fillMaxWidth()
             ) {
                 OverlayScrollIndicator(
@@ -98,13 +116,7 @@ fun EinkaufslisteScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Button(
-                    onClick = {
-                        val newItem = ShoppingItem(
-                            id = shoppingList.size + 1,
-                            name = "Produkt ${shoppingList.size + 1}"
-                        )
-                        onItemAdded(newItem)
-                    },
+                    onClick = onAddItemClicked,
                     modifier = Modifier
                         .weight(1f)
                         .height(60.dp),
@@ -123,7 +135,6 @@ fun EinkaufslisteScreen(
         }
     }
 }
-
 
 @Composable
 fun ShoppingListItem(
@@ -211,40 +222,54 @@ fun OverlayScrollIndicator(
     val listState = rememberLazyListState()
 
     Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(shoppingList.size) { index ->
-                val item = shoppingList[index]
-                ShoppingListItem(
-                    item = item,
-                    onDeleteClicked = { onDeleteClicked(item) },
-                    onDetailsClicked = { onDetailsClicked(item) }
+        if (shoppingList.isEmpty()) {
+            // Nachricht anzeigen, wenn keine Einträge vorhanden sind
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Noch keine Einträge vorhanden",
+                    fontSize = 18.sp,
+                    color = Color.Gray
                 )
             }
-        }
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(shoppingList.size) { index ->
+                    val item = shoppingList[index]
+                    ShoppingListItem(
+                        item = item,
+                        onDeleteClicked = { onDeleteClicked(item) },
+                        onDetailsClicked = { onDetailsClicked(item) }
+                    )
+                }
+            }
 
-        if (listState.canScrollForward) {
-            Text(
-                text = "Scroll for more",
-                color = Color.Gray,
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
-            )
-        }
+            if (listState.canScrollForward) {
+                Text(
+                    text = "Scroll for more",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp)
+                )
+            }
 
-        if (listState.canScrollBackward) {
-            Text(
-                text = "Scroll up",
-                color = Color.Gray,
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 16.dp)
-            )
+            if (listState.canScrollBackward) {
+                Text(
+                    text = "Scroll up",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp)
+                )
+            }
         }
     }
 }
