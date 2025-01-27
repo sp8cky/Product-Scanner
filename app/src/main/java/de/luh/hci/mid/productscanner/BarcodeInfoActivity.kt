@@ -1,8 +1,11 @@
 package de.luh.hci.mid.productscanner
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.ComponentActivity.RESULT_OK
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -29,6 +33,8 @@ import org.json.JSONObject
 import java.net.URL
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import de.luh.hci.mid.productscanner.ui.theme.Green60
+import de.luh.hci.mid.productscanner.ui.theme.Red40
 
 class BarcodeInfoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -265,6 +271,32 @@ fun ProductDetailsScreen(
                 )
             }
         }
+
+        item {
+            Button(
+                onClick = {
+                    val newItem = ShoppingItem(
+                        id = ShoppingListManager.shoppingList.size + 1,
+                        name = productName
+                    )
+                    ShoppingListManager.addItem(newItem) // Produkt hinzufügen
+},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Green60)
+            ) {
+                Text(
+                    text = "Zur Einkaufsliste hinzufügen",
+                    fontSize = 18.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+
+
     }
 }
 

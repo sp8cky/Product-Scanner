@@ -34,6 +34,7 @@ import java.io.File
 import java.io.IOException
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import de.luh.hci.mid.productscanner.ui.theme.Green60
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 
 class AddItemActivitiy : ComponentActivity() {
@@ -266,7 +267,7 @@ class AddItemActivitiy : ComponentActivity() {
                         modifier = Modifier
                             .weight(1f)
                             .height(60.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Red40),
+                        colors = ButtonDefaults.buttonColors(containerColor = Green60),
                         //shape = RectangleShape,
                         elevation = ButtonDefaults.buttonElevation(0.dp)
                     ) {
