@@ -102,18 +102,17 @@ fun BottomNavigationBar(
 
 
 suspend fun fetchTTSFromOpenAI(text: String, voice: String, volume: Float) {
-    val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Key aus den BuildConfig-Variablen
+    val apiKey = BuildConfig.OPENAI_API_KEY
     val url = "https://api.openai.com/v1/audio/speech"
     val client = OkHttpClient()
 
-    // JSON-Objekt für die Anfrage erstellen
-    val jsonRequest = JSONObject()
-    jsonRequest.put("input", text)
-    jsonRequest.put("voice", voice.lowercase()) // Dynamisch ausgewählte Stimme
-    jsonRequest.put("model", "tts-1")
+    val jsonRequest = JSONObject().apply {
+        put("input", text)
+        put("voice", voice.lowercase())
+        put("model", "tts-1")
+    }
 
     val requestBody = jsonRequest.toString().toRequestBody("application/json".toMediaType())
-
     val request = Request.Builder()
         .url(url)
         .post(requestBody)
@@ -122,56 +121,47 @@ suspend fun fetchTTSFromOpenAI(text: String, voice: String, volume: Float) {
         .build()
 
     try {
-        val response = client.newCall(request).execute()
-        if (response.isSuccessful) {
-            val responseBody = response.body?.byteStream()
-            if (responseBody != null) {
-                Log.d("OpenAI TTS", "Audio erfolgreich generiert")
-
-                // Falls ein MediaPlayer bereits aktiv ist, stoppen und freigeben
-                mediaPlayer?.apply {
-                    if (isPlaying) {
-                        Log.d("MediaPlayer", "Vorherige TTS-Ausgabe wird gestoppt.")
-                        stop()
-                    }
-                    reset()
-                    release()
-                }
-
-                mediaPlayer = MediaPlayer().apply {
-                    val tempFile = File.createTempFile("tts_audio", ".mp3")
-                    tempFile.outputStream().use { output ->
-                        responseBody.copyTo(output)
-                    }
-
-                    setDataSource(tempFile.absolutePath)
-                    prepare()
-                    setVolume(volume, volume) // Lautstärke einstellen
-                    start()
-
-                    setOnCompletionListener {
-                        Log.d("MediaPlayer", "TTS-Wiedergabe abgeschlossen.")
-                        release()
-                        mediaPlayer = null // MediaPlayer zurücksetzen
-                        tempFile.delete() // Temporäre Datei löschen
-                    }
-
-                    setOnErrorListener { _, what, extra ->
-                        Log.e("MediaPlayer", "Fehler während der Wiedergabe: what=$what, extra=$extra")
-                        release()
-                        mediaPlayer = null
-                        tempFile.delete()
-                        true
-                    }
-                }
-            } else {
-                Log.e("OpenAI TTS", "Leere Antwort erhalten")
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                Log.e("OpenAI TTS", "Fehler: ${response.code} - ${response.message}")
+                return
             }
-        } else {
-            Log.e("OpenAI TTS", "Fehler: ${response.code} - ${response.message}")
+
+            val responseBody = response.body ?: return
+            val stream = responseBody.byteStream()
+
+            // MediaPlayer vorbereiten
+            mediaPlayer?.apply {
+                if (isPlaying) {
+                    stop()
+                }
+                reset()
+                release()
+            }
+
+            val tempFile = File.createTempFile("tts_audio", ".mp3")
+            tempFile.outputStream().use { output ->
+                val buffer = ByteArray(1024) // Buffer für Echtzeit-Streaming
+                var bytesRead: Int
+                while (stream.read(buffer).also { bytesRead = it } != -1) {
+                    output.write(buffer, 0, bytesRead)
+                }
+            }
+
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(tempFile.absolutePath)
+                prepare()
+                setVolume(volume, volume)
+                start()
+
+                setOnCompletionListener {
+                    release()
+                    mediaPlayer = null
+                    tempFile.delete()
+                }
+            }
         }
     } catch (e: Exception) {
-        Log.e("OpenAI TTS", "Fehler beim Abrufen der TTS-Daten: ${e.message}", e)
+        Log.e("OpenAI TTS", "Fehler beim Echtzeit-Audio-Streaming: ${e.message}", e)
     }
 }
-
