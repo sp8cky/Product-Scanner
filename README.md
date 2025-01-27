@@ -10,11 +10,14 @@ Andoid App as part of a laboratory for visually impaired users to scan products 
 6. [Disclaimer](#disclaimer)
 
 ## Implemented Features
-- SCAN: 
-- SCAN-HISTORY:
-- SHOPPING-LIST:
-- FILTER:
-- SETTINGS: 
+- SCAN: Scans the barcode of a product.
+- INFO: Shows product info - name, brand, ingredients and associated filters.
+- SCAN-HISTORY: Saves all scanned products.
+- SHOPPING-LIST: Includes products on the shopping list, products can be added, edited or deleted.
+- FILTER: Filters such as vegetarian, nut-free... can be deactivated/activated
+- SETTINGS: App settings such as language and volume
+
+All screens have a TTS button so that the screen content is output via voice output.
 
 ### Project status
 - Still in progress
