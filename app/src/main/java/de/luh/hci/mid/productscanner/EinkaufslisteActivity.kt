@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +51,7 @@ object ShoppingListManager {
 
 class EinkaufslisteActivity : ComponentActivity() {
     private lateinit var addItemLauncher: ActivityResultLauncher<Intent>
+    private lateinit var editItemLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,22 +68,46 @@ class EinkaufslisteActivity : ComponentActivity() {
             }
         }
 
+        // Launcher zur Handhabung des Ergebnisses der EditItemActivity
+        editItemLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val updatedName = result.data?.getStringExtra("updated_name") ?: return@registerForActivityResult
+                val itemId = result.data?.getIntExtra("item_id", -1) ?: -1
+                if (itemId != -1) {
+                    val index = ShoppingListManager.shoppingList.indexOfFirst { it.id == itemId }
+                    if (index != -1) {
+                        val updatedItem = ShoppingListManager.shoppingList[index].copy(name = updatedName)
+                        ShoppingListManager.shoppingList[index] = updatedItem
+                    }
+                }
+            }
+        }
+
         setContent {
             EinkaufslisteScreen(
                 shoppingList = ShoppingListManager.shoppingList,
                 onAddItemClicked = {
                     val intent = Intent(this, AddItemActivitiy::class.java)
                     addItemLauncher.launch(intent)
+                },
+                onEditItemClicked = { item ->
+                    val intent = Intent(this, EditItemActivity::class.java).apply {
+                        putExtra("item_id", item.id)
+                        putExtra("item_name", item.name)
+                    }
+                    editItemLauncher.launch(intent)
                 }
             )
         }
     }
 }
 
+
 @Composable
 fun EinkaufslisteScreen(
     shoppingList: SnapshotStateList<ShoppingItem>,
     onAddItemClicked: () -> Unit,
+    onEditItemClicked: (ShoppingItem) -> Unit, // Neue Callback-Funktion
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -103,7 +129,7 @@ fun EinkaufslisteScreen(
                 OverlayScrollIndicator(
                     shoppingList = shoppingList,
                     onDeleteClicked = { item -> ShoppingListManager.removeItem(item) },
-                    onDetailsClicked = { item -> Log.d("Einkaufsliste", "Details für ${item.name} anzeigen") }
+                    onDetailsClicked = { onEditItemClicked(it) } // Edit-Funktion aufrufen
                 )
             }
 
@@ -135,6 +161,7 @@ fun EinkaufslisteScreen(
         }
     }
 }
+
 
 @Composable
 fun ShoppingListItem(
