@@ -14,6 +14,8 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -158,11 +160,14 @@ fun EntryItem(
     onDetailsClicked: () -> Unit,
     onDeleteClicked: () -> Unit
 ) {
+    // Zustand für den Bestätigungsdialog
+    val showConfirmationDialog = remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically, // Vertikale Zentrierung für die gesamte Zeile
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Produktbild
@@ -186,7 +191,7 @@ fun EntryItem(
             contentDescription = "Produktbild",
             modifier = Modifier
                 .size(50.dp)
-                .align(Alignment.CenterVertically) // Zentriert das Bild vertikal in der Zeile
+                .align(Alignment.CenterVertically)
         )
 
         Spacer(modifier = Modifier.width(2.dp))
@@ -194,8 +199,8 @@ fun EntryItem(
         // Produktname und Barcode
         Column(
             modifier = Modifier
-                .weight(1f) // Nimmt den restlichen Platz ein
-                .align(Alignment.CenterVertically), // Zentriert die Spalte vertikal
+                .weight(1f)
+                .align(Alignment.CenterVertically),
             verticalArrangement = Arrangement.Center
         ) {
             Text(
@@ -234,7 +239,7 @@ fun EntryItem(
             }
 
             Button(
-                onClick = onDeleteClicked,
+                onClick = { showConfirmationDialog.value = true },
                 modifier = Modifier
                     .height(40.dp)
                     .width(40.dp),
@@ -251,5 +256,27 @@ fun EntryItem(
                 )
             }
         }
+    }
+
+    // Bestätigungsdialog
+    if (showConfirmationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showConfirmationDialog.value = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDeleteClicked() // Produkt löschen
+                    showConfirmationDialog.value = false
+                }) {
+                    Text("Ja", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmationDialog.value = false }) {
+                    Text("Nein")
+                }
+            },
+            title = { Text("Produkt entfernen") },
+            text = { Text("Möchten Sie dieses Produkt wirklich entfernen?") }
+        )
     }
 }
