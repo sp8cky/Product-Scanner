@@ -1,8 +1,11 @@
 package de.luh.hci.mid.productscanner
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.ComponentActivity.RESULT_OK
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -15,33 +18,45 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
-import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import de.luh.hci.mid.productscanner.ui.theme.Green60
+import de.luh.hci.mid.productscanner.ui.theme.Red40
 
 class BarcodeInfoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val barcodeValue = intent.getStringExtra("BARCODE_VALUE")
+        val filterRepository = FilterRepository(this)
 
         setContent {
             var productName by remember { mutableStateOf("Lade...") }
             var brand by remember { mutableStateOf("Lade...") }
             var ingredients by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf("") }
-            var filters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+            var productFilters by remember { mutableStateOf<Map<String, Boolean?>>(emptyMap()) }
+            var activeFilterOptions by remember { mutableStateOf<List<FilterOption>>(emptyList()) }
             var isExpanded by remember { mutableStateOf(false) }
             var isLoading by remember { mutableStateOf(true) }
             val scope = rememberCoroutineScope()
+
+            // Load active filters from DataStore
+            LaunchedEffect(Unit) {
+                activeFilterOptions = filterRepository.getFilters().filter { it.isActive }
+            }
 
             // Fetch product data
             LaunchedEffect(barcodeValue) {
@@ -53,29 +68,33 @@ class BarcodeInfoActivity : ComponentActivity() {
                             brand = productData["brand"] as? String ?: "Unbekannt"
                             ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
                             productImageUrl = productData["image_url"] as? String ?: ""
-                            filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
+                            productFilters = (productData["filters"] as? Map<*, *>)?.mapNotNull { entry ->
+                                val key = entry.key as? String
+                                val value = entry.value as? Boolean?
+                                if (key != null) key to value else null
+                            }?.toMap() ?: emptyMap()
 
-                            // Produkt zur Scan-History hinzufügen
+
                             val newProduct = ScannedProduct(
                                 id = it,
                                 name = productName,
                                 imageUrl = productImageUrl
                             )
                             ScanHistoryManager.addProduct(newProduct)
+
                         } catch (e: Exception) {
                             Log.e("BarcodeInfoActivity", "Error fetching product data", e)
                             productName = "Fehler beim Laden"
                             brand = "Fehler"
                             ingredients = "Fehler"
                             productImageUrl = ""
-                            filters = emptyMap()
+                            productFilters = emptyMap()
                         } finally {
                             isLoading = false
                         }
                     }
                 }
             }
-
 
             Scaffold(
                 topBar = { TopNavigationBar(title = "Produktdetails") },
@@ -94,7 +113,8 @@ class BarcodeInfoActivity : ComponentActivity() {
                         brand = brand,
                         ingredients = ingredients,
                         productImageUrl = productImageUrl,
-                        filters = filters,
+                        productFilters = productFilters,
+                        activeFilterOptions = activeFilterOptions,
                         isExpanded = isExpanded,
                         onExpandToggle = { isExpanded = !isExpanded },
                         modifier = Modifier.padding(padding)
@@ -115,16 +135,21 @@ class BarcodeInfoActivity : ComponentActivity() {
             }
 
             val product = json.getJSONObject("product")
-            val filters = mutableMapOf<String, Boolean>()
+            val filters = mutableMapOf<String, Boolean?>()
 
-            product.optJSONArray("ingredients_analysis_tags")?.let { tags ->
-                filters["Vegetarisch"] = tags.toString().contains("en:vegetarian")
-                filters["Vegan"] = tags.toString().contains("en:vegan")
-            }
-            product.optJSONArray("allergens_tags")?.let { tags ->
-                filters["Nussfrei"] = !tags.toString().contains("en:nuts")
-                filters["Laktosefrei"] = !tags.toString().contains("en:milk")
-            }
+            // Analyze ingredients
+            val ingredients = product.optJSONArray("ingredients")
+            val allergensTags = product.optJSONArray("allergens_tags") ?: JSONArray()
+
+            // Determine vegetarian and vegan status
+            filters["Vegetarisch"] = checkIngredientStatus(ingredients, "vegetarian")
+            filters["Vegan"] = checkIngredientStatus(ingredients, "vegan")
+
+            // Check allergens
+            filters["Nussfrei"] = !allergensTags.toString().contains("en:nuts")
+            filters["Sojafrei"] = !allergensTags.toString().contains("en:soybeans")
+            filters["Glutenfrei"] = !allergensTags.toString().contains("en:gluten")
+            filters["Milch/Laktosefrei"] = !allergensTags.toString().contains("en:milk")
 
             mapOf(
                 "name" to product.optString("product_name", "Unbekannt"),
@@ -138,6 +163,28 @@ class BarcodeInfoActivity : ComponentActivity() {
             emptyMap()
         }
     }
+
+    private fun checkIngredientStatus(ingredients: JSONArray?, statusKey: String): Boolean? {
+        if (ingredients == null) return null
+        var hasYes = false
+        var hasMaybe = false
+
+        for (i in 0 until ingredients.length()) {
+            val ingredient = ingredients.optJSONObject(i)
+            if (ingredient != null) {
+                when (ingredient.optString(statusKey)) {
+                    "yes" -> hasYes = true
+                    "maybe" -> hasMaybe = true
+                }
+            }
+        }
+
+        return when {
+            hasYes && !hasMaybe -> true // All ingredients are "yes"
+            hasMaybe -> null           // Uncertainty exists
+            else -> false              // At least one ingredient is not "yes"
+        }
+    }
 }
 
 @Composable
@@ -146,7 +193,8 @@ fun ProductDetailsScreen(
     brand: String,
     ingredients: String,
     productImageUrl: String,
-    filters: Map<String, Boolean>,
+    productFilters: Map<String, Boolean?>,
+    activeFilterOptions: List<FilterOption>,
     isExpanded: Boolean,
     onExpandToggle: () -> Unit,
     modifier: Modifier = Modifier
@@ -157,7 +205,7 @@ fun ProductDetailsScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Produktbild
+        // Product image
         item {
             Image(
                 painter = rememberAsyncImagePainter(
@@ -172,7 +220,7 @@ fun ProductDetailsScreen(
             )
         }
 
-        // Produktdetails
+        // Product details
         item {
             Text(
                 text = "Name: $productName",
@@ -185,7 +233,7 @@ fun ProductDetailsScreen(
             )
         }
 
-        // Zutaten mit Pfeilen
+        // Ingredients with toggle
         item {
             Row(
                 modifier = Modifier
@@ -198,12 +246,12 @@ fun ProductDetailsScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (isExpanded) "Zutaten: $ingredients"
-                        else "Zutaten: ${ingredients.take(50)}" +
-                                if (!isExpanded && ingredients.length > 50) "..." else "",
+                        else "Zutaten: ${ingredients.take(50)}" + if (ingredients.length > 50) "..." else "",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.primary
                     )
+
                 }
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -213,18 +261,47 @@ fun ProductDetailsScreen(
             }
         }
 
-        // Filteranzeige
-        filters.forEach { (label, isActive) ->
+        // Display active filters with status
+        activeFilterOptions.forEach { filterOption ->
             item {
-                FilterItem(label = label, isActive = isActive)
+                val status = productFilters[filterOption.label]
+                FilterItem(
+                    label = filterOption.label,
+                    status = status
+                )
             }
         }
+
+        item {
+            Button(
+                onClick = {
+                    val newItem = ShoppingItem(
+                        id = ShoppingListManager.shoppingList.size + 1,
+                        name = productName
+                    )
+                    ShoppingListManager.addItem(newItem) // Produkt hinzufügen
+},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Green60)
+            ) {
+                Text(
+                    text = "Zur Einkaufsliste hinzufügen",
+                    fontSize = 18.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+
+
     }
 }
 
-
 @Composable
-fun FilterItem(label: String, isActive: Boolean) {
+fun FilterItem(label: String, status: Boolean?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -235,10 +312,19 @@ fun FilterItem(label: String, isActive: Boolean) {
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium
         )
-        Checkbox(
-            checked = isActive,
-            onCheckedChange = null,
-            enabled = false
+        Text(
+            text = when (status) {
+                true -> "✔"
+                null -> "?"
+                false -> "❌"
+            },
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = when (status) {
+                true -> Color.Green
+                null -> Color.Gray
+                false -> Color.Red
+            }
         )
     }
 }

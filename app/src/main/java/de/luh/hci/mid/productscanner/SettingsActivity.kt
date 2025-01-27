@@ -3,183 +3,289 @@ package de.luh.hci.mid.productscanner
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
-import de.luh.hci.mid.productscanner.ui.theme.Red40
 
 class SettingsActivity : ComponentActivity() {
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            SettingsScreen(
-                onHomeClicked = { finish() }, // Zurück zur vorherigen Aktivität
-                onSpeakerClicked = { /* Action for Lautsprecher */ }
-            )
+            SettingsScreen(viewModel = settingsViewModel)
         }
     }
+}
 
-    @Composable
-    fun SettingsScreen(
-        onHomeClicked: () -> Unit,
-        onSpeakerClicked: () -> Unit,
-        modifier: Modifier = Modifier
-    ) {
-        Scaffold(
-            topBar = { TopNavigationBar(title = "Einstellungen") },
-            bottomBar = { BottomNavigationBar(navController = null) }
-        ) { paddingValues ->
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp), // Zusätzliche Polsterung
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+@Composable
+fun SettingsScreen(viewModel: SettingsViewModel) {
+    var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showInfoDialog by remember { mutableStateOf(false) }
 
-                // Liste mit Einstellungen und Toggles
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SettingItem(label = "Toggle 1")
-                    SettingItem(label = "Dark Mode")
-                    SettingItem(label = "Toggle 3")
-
-                    // Voice Auswahl
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Voice",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        )
-
-                        val selectedOption = remember { mutableStateOf("Option 1") }
-                        DropdownMenuButton(
-                            options = listOf(
-                                "Option 1",
-                                "Option 2",
-                                "Option 3",
-                                "Option 4",
-                                "Option 5"
-                            ),
-                            selectedOption = selectedOption.value,
-                            onOptionSelected = { selectedOption.value = it }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Volume Slider
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Volume",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        )
-
-                        val volumeLevel = remember { mutableStateOf(50f) }
-                        Slider(
-                            value = volumeLevel.value,
-                            onValueChange = { volumeLevel.value = it },
-                            valueRange = 0f..100f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = Blue40,
-                                activeTrackColor = Blue40
-                            )
-                        )
-                    }
-                }
-
-            }
-        }
-    }
-
-    @Composable
-    fun SettingItem(label: String) {
-        Row(
+    Scaffold(
+        topBar = { TopNavigationBar(title = "Einstellungen") },
+        bottomBar = { BottomNavigationBar(navController = null) }
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = label,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
-            )
-
-            val isChecked = remember { mutableStateOf(false) }
-
-            Switch(
-                checked = isChecked.value,
-                onCheckedChange = { isChecked.value = it },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Blue40,
-                    uncheckedThumbColor = Color.Gray
-                )
-            )
-        }
-    }
-
-    @Composable
-    fun DropdownMenuButton(
-        options: List<String>,
-        selectedOption: String,
-        onOptionSelected: (String) -> Unit
-    ) {
-        val expanded = remember { mutableStateOf(false) }
-
-        Box {
-            Button(
-                onClick = { expanded.value = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
-                shape = RectangleShape
+            // Einstellungen
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(text = selectedOption, fontSize = 16.sp)
-            }
-            DropdownMenu(
-                expanded = expanded.value,
-                onDismissRequest = { expanded.value = false }
-            ) {
-                options.forEach { option ->
-                    DropdownMenuItem(
-                        onClick = {
-                            onOptionSelected(option)
-                            expanded.value = false
-                        },
-                        text = { Text(option, fontSize = 16.sp) }
+                // Voice-Auswahl
+                VoiceSetting(viewModel)
+
+                // Lautstärke-Einstellung
+                VolumeSetting(viewModel)
+
+                // Datenschutzrichtlinie
+                Button(
+                    onClick = { showPrivacyDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Blue40),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Datenschutzrichtlinie",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Info-Bereich
+                Button(
+                    onClick = { showInfoDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Blue40),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Info über die App",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Datenschutzrichtlinie-Dialog
+            if (showPrivacyDialog) {
+                AlertDialog(
+                    onDismissRequest = { showPrivacyDialog = false },
+                    confirmButton = {
+                        TextButton(onClick = { showPrivacyDialog = false }) {
+                            Text("OK", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    title = { Text("Datenschutzrichtlinie") },
+                    text = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 300.dp) // Setzt eine maximale Höhe für den scrollbaren Bereich
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                item {
+                                    Text(
+                                        "Wir nehmen den Schutz Ihrer Daten ernst. Hier erfahren Sie, wie Ihre Daten in der App verarbeitet werden:\n",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        "- Barcode-Scanning: Barcodes werden an die Datenbank Open Food Facts gesendet, um Produktinformationen abzurufen. Es werden keine Daten dauerhaft gespeichert.\n",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        "- Bildersuche: Aufgenommene Bilder werden an OpenAI gesendet, um passende Produkte zu finden. Die Bilder werden nach der Verarbeitung gelöscht.\n",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        "- Sprachausgabe (TTS): Produktinformationen werden an OpenAI (ChatGPT) gesendet, um Sprache zu generieren. Diese Daten werden nur temporär verarbeitet.\n",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        "Ihre Daten werden nur für die Bereitstellung der Funktionen genutzt und niemals dauerhaft gespeichert oder ohne Grund an Dritte weitergegeben.",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+
+            // Info-Bereich-Dialog
+            if (showInfoDialog) {
+                AlertDialog(
+                    onDismissRequest = { showInfoDialog = false },
+                    confirmButton = {
+                        TextButton(onClick = { showInfoDialog = false }) {
+                            Text("OK", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    title = { Text("Info über die App") },
+                    text = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 300.dp) // Setzt eine maximale Höhe für den scrollbaren Bereich
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                item {
+                                    Text(
+                                        "Produkt Scanner v1.0\n\n",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        "Entwickler: Emin Bayhan, Julia Hermerding\n",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        "Funktionen:\n",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                item {
+                                    Text(
+                                        "- Barcode-Scanner: Echtzeit-Produktsuche mit Inhaltsstoffanalyse.\n" +
+                                                "- Sprachausgabe (TTS): Barrierefreier Zugang zu Produktinformationen.\n" +
+                                                "- Filter: Sortierung nach vegan, vegetarisch, allergenfrei.\n" +
+                                                "- Einkaufsliste: Erstellen von einer Einkaufsliste.",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+
+        }
+    }
+}
+
+@Composable
+fun VoiceSetting(viewModel: SettingsViewModel) {
+    val selectedVoice by viewModel.selectedVoice.collectAsState()
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Vorlese-Stimme",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black
+        )
+
+        DropdownMenuButton(
+            options = listOf(
+                "Alloy", "Ash", "Coral", "Echo", "Fable", "Onyx", "Nova", "Sage", "Shimmer"
+            ),
+            selectedOption = selectedVoice,
+            onOptionSelected = { viewModel.updateSelectedVoice(it) }
+        )
+    }
+}
+
+@Composable
+fun VolumeSetting(viewModel: SettingsViewModel) {
+    val volumeLevel by viewModel.volumeLevel.collectAsState()
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Lautstärke",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black
+        )
+
+        Slider(
+            value = volumeLevel,
+            onValueChange = { viewModel.updateVolumeLevel(it) },
+            valueRange = 0f..100f,
+            colors = SliderDefaults.colors(
+                thumbColor = Blue40,
+                activeTrackColor = Blue40
+            )
+        )
+    }
+}
+
+
+@Composable
+fun DropdownMenuButton(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
+    val expanded = remember { mutableStateOf(false) }
+
+    Box {
+        Button(
+            onClick = { expanded.value = true },
+            colors = ButtonDefaults.buttonColors(containerColor = Blue40),
+            shape = RectangleShape
+        ) {
+            Text(text = selectedOption, fontSize = 16.sp, color = Color.White)
+        }
+        DropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded.value = false
+                    },
+                    text = { Text(option, fontSize = 16.sp, color = Blue40) }
+                )
             }
         }
     }
