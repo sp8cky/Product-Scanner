@@ -120,7 +120,7 @@ class ImageInfoActivity : ComponentActivity() {
                                     put(
                                         JSONObject().apply {
                                             put("type", "text");
-                                            put("text", "Gebe mir das Produkt (Nahrungsmittel) mit Name, Marke und Zutaten an. Ignoriere Dinge im Hintergrund. Falls Dinge nicht angegeben sind, versuche sie zu vervollständigen durch Recherche.") })
+                                            put("text", "Zeige mir das Produkt mit Name, Marke und Zutaten an. Ignoriere Dinge im Hintergrund. Falls Dinge nicht angegeben sind, versuche sie zu vervollständigen durch Recherche.") })
                                     put(
                                         JSONObject().apply {
                                             put("type", "image_url")
