@@ -283,7 +283,7 @@ fun EntryItem(
                 }
             },
             title = { Text("Produkt entfernen") },
-            text = { Text("Möchten Sie dieses Produkt wirklich aus der Liste entfernen?") }
+            text = { Text("Möchtest Du dieses Produkt wirklich aus der Liste entfernen?") }
         )
     }
 }
