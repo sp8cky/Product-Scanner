@@ -38,7 +38,10 @@ class MainActivity : ComponentActivity(), TTSContentProvider {
                 MainScreen()
             }
         }
+        SoundManager.initialize(this)
+
     }
+
 }
 
 @Composable
@@ -83,7 +86,9 @@ fun HomeScreen(navController: NavController) {
         Button(
             onClick = {
                 // Startet die ScanActivity
+
                 val intent = Intent(context, ScanActivity::class.java)
+                SoundManager.playSound("tap")
                 context.startActivity(intent)
             },
             modifier = Modifier
@@ -112,7 +117,9 @@ fun HomeScreen(navController: NavController) {
         ) {
             Button(
                 onClick = {
+
                     val intent = Intent(context, DatabaseActivity::class.java)
+                    SoundManager.playSound("tap")
                     context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f), // Höhe füllt den verfügbaren Platz
@@ -130,6 +137,7 @@ fun HomeScreen(navController: NavController) {
             Button(
                 onClick = {
                     val intent = Intent(context, EinkaufslisteActivity::class.java)
+                    SoundManager.playSound("tap")
                     context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f),
@@ -159,6 +167,7 @@ fun HomeScreen(navController: NavController) {
                 onClick = {
                     val intent = Intent(context, FilterActivity::class.java)
                     context.startActivity(intent)
+                    SoundManager.playSound("tap")
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
@@ -176,6 +185,7 @@ fun HomeScreen(navController: NavController) {
                 onClick = {
                     val intent = Intent(context, SettingsActivity::class.java)
                     context.startActivity(intent)
+                    SoundManager.playSound("tap")
                 },
                 modifier = Modifier.fillMaxHeight().weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
