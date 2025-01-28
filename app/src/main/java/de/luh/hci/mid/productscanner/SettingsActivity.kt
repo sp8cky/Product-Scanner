@@ -21,12 +21,11 @@ import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Blue40
 
-class SettingsActivity : ComponentActivity() , TTSContentProvider {
+class SettingsActivity : ComponentActivity(), TTSContentProvider {
     private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             SettingsScreen(viewModel = settingsViewModel)
         }
@@ -46,7 +45,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         topBar = { TopNavigationBar(title = "Einstellungen") },
         bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
     ) { paddingValues ->
-        LazyColumn( // Ersetzt die äußere Column durch LazyColumn für Scrollfunktionalität
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -54,19 +53,15 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Einstellungen
             item {
-                // Voice-Auswahl
                 VoiceSetting(viewModel)
             }
 
             item {
-                // Lautstärke-Einstellung
                 VolumeSetting(viewModel)
             }
 
             item {
-                // Datenschutzrichtlinie
                 Button(
                     onClick = { showPrivacyDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Blue40),
@@ -85,7 +80,6 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             }
 
             item {
-                // Info-Bereich
                 Button(
                     onClick = { showInfoDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Blue40),
@@ -99,7 +93,6 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 }
             }
 
-            // Datenschutzrichtlinie-Dialog
             if (showPrivacyDialog) {
                 item {
                     AlertDialog(
@@ -156,7 +149,6 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 }
             }
 
-            // Info-Bereich-Dialog
             if (showInfoDialog) {
                 item {
                     AlertDialog(
@@ -232,9 +224,7 @@ fun VoiceSetting(viewModel: SettingsViewModel) {
         )
 
         DropdownMenuButton(
-            options = listOf(
-                "Alloy", "Ash", "Coral", "Echo", "Fable", "Onyx", "Nova", "Sage", "Shimmer"
-            ),
+            options = listOf("Alloy", "Ash", "Coral", "Echo", "Fable", "Onyx", "Nova", "Sage", "Shimmer"),
             selectedOption = selectedVoice,
             onOptionSelected = { viewModel.updateSelectedVoice(it) }
         )
@@ -267,7 +257,6 @@ fun VolumeSetting(viewModel: SettingsViewModel) {
         )
     }
 }
-
 
 @Composable
 fun DropdownMenuButton(
