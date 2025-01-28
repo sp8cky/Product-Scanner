@@ -214,6 +214,7 @@ fun ProductDetailsScreen(
     onExpandToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -294,7 +295,10 @@ fun ProductDetailsScreen(
                         id = ShoppingListManager.shoppingList.size + 1,
                         name = productName
                     )
+
+                    SoundManager.playSound("success")
                     ShoppingListManager.addItem(newItem) // Produkt hinzufügen
+                    Toast.makeText(context, "Zur Einkaufsliste hinzugefügt!", Toast.LENGTH_SHORT).show()
                 },
 
                 modifier = Modifier

@@ -107,6 +107,7 @@ class EinkaufslisteActivity : ComponentActivity(), TTSContentProvider {
                 shoppingList = ShoppingListManager.shoppingList,
                 onAddItemClicked = {
                     val intent = Intent(this, AddItemActivitiy::class.java)
+                    SoundManager.playSound("tap")
                     addItemLauncher.launch(intent)
                 },
                 onEditItemClicked = { item ->
@@ -147,8 +148,10 @@ fun EinkaufslisteScreen(
             ) {
                 OverlayScrollIndicator(
                     shoppingList = shoppingList,
-                    onDeleteClicked = { item -> ShoppingListManager.removeItem(item) },
-                    onDetailsClicked = { onEditItemClicked(it) } // Edit-Funktion aufrufen
+                    onDeleteClicked = { item -> ShoppingListManager.removeItem(item)
+                        SoundManager.playSound("delete")},
+                    onDetailsClicked = { onEditItemClicked(it)
+                        SoundManager.playSound("tap")} // Edit-Funktion aufrufen
                 )
             }
 

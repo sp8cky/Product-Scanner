@@ -25,6 +25,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.File
 import de.luh.hci.mid.productscanner.BuildConfig
+import de.luh.hci.mid.productscanner.SoundManager
 
 private var mediaPlayer: MediaPlayer? = null // Globaler MediaPlayer
 @Composable
@@ -42,6 +43,7 @@ fun BottomNavigationBar(
     val items = listOf(
         NavItem("home", "Home", "\uD83C\uDFE0", MaterialTheme.colorScheme.primary),
         NavItem("tts", "TTS", "\uD83D\uDD0A", MaterialTheme.colorScheme.primary)
+
     )
 
     NavigationBar(
@@ -53,6 +55,7 @@ fun BottomNavigationBar(
             NavigationBarItem(
                 selected = currentRoute == item.route,
                 onClick = {
+                    SoundManager.playSound("tap")
                     if (item.route == "home") {
                         // Navigation zur Home-Activity
                         if (navController == null) {
@@ -70,6 +73,7 @@ fun BottomNavigationBar(
                         }
                     } else if (item.route == "tts") {
                         // Dynamischer TTS-Text von der aktuellen Activity
+
                         val ttsContent = ttsContentProvider.getTTSContent()
                         scope.launch(Dispatchers.IO) {
                             fetchTTSFromOpenAI(

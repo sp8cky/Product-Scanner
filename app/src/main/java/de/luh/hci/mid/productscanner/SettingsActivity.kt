@@ -63,7 +63,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 
             item {
                 Button(
-                    onClick = { showPrivacyDialog = true },
+                    onClick = { showPrivacyDialog = true
+                        SoundManager.playSound("tap")},
                     colors = ButtonDefaults.buttonColors(containerColor = Blue40),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -81,7 +82,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 
             item {
                 Button(
-                    onClick = { showInfoDialog = true },
+                    onClick = { showInfoDialog = true
+                        SoundManager.playSound("tap")},
                     colors = ButtonDefaults.buttonColors(containerColor = Blue40),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -98,7 +100,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     AlertDialog(
                         onDismissRequest = { showPrivacyDialog = false },
                         confirmButton = {
-                            TextButton(onClick = { showPrivacyDialog = false }) {
+                            TextButton(onClick = { showPrivacyDialog = false
+                                SoundManager.playSound("tap")}) {
                                 Text("OK", fontWeight = FontWeight.Bold)
                             }
                         },
@@ -154,7 +157,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     AlertDialog(
                         onDismissRequest = { showInfoDialog = false },
                         confirmButton = {
-                            TextButton(onClick = { showInfoDialog = false }) {
+                            TextButton(onClick = { showInfoDialog = false
+                                SoundManager.playSound("tap")}) {
                                 Text("OK", fontWeight = FontWeight.Bold)
                             }
                         },
@@ -268,7 +272,8 @@ fun DropdownMenuButton(
 
     Box {
         Button(
-            onClick = { expanded.value = true },
+            onClick = { expanded.value = true
+                SoundManager.playSound("tap")},
             colors = ButtonDefaults.buttonColors(containerColor = Blue40),
             shape = RectangleShape
         ) {
@@ -283,6 +288,7 @@ fun DropdownMenuButton(
                     onClick = {
                         onOptionSelected(option)
                         expanded.value = false
+                        SoundManager.playSound("tap")
                     },
                     text = { Text(option, fontSize = 16.sp, color = Blue40) }
                 )

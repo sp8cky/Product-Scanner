@@ -54,6 +54,7 @@ object ScanHistoryManager {
     }
 
     fun removeProduct(product: ScannedProduct) {
+        SoundManager.playSound("delete")
         scanHistory.remove(product)
     }
 }
@@ -137,6 +138,7 @@ fun DatabaseScreen(
                         EntryItem(
                             product = product,
                             onDetailsClicked = {
+                                SoundManager.playSound("tap")
                                 // Intent starten mit Barcode
                                 val intent = Intent(context, BarcodeInfoActivity::class.java).apply {
                                     putExtra("BARCODE_VALUE", product.id) // Barcode des Produkts
@@ -239,7 +241,10 @@ fun EntryItem(
             }
 
             Button(
-                onClick = { showConfirmationDialog.value = true },
+                onClick = {
+                    SoundManager.playSound("tap")
+                    showConfirmationDialog.value = true
+                          },
                 modifier = Modifier
                     .height(40.dp)
                     .width(40.dp),
@@ -271,7 +276,9 @@ fun EntryItem(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmationDialog.value = false }) {
+                TextButton(onClick = {
+                    SoundManager.playSound("tap")
+                    showConfirmationDialog.value = false }) {
                     Text("Nein")
                 }
             },

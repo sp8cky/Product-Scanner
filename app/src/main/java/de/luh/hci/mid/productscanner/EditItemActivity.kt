@@ -56,10 +56,12 @@ class EditItemActivity : ComponentActivity() , TTSContentProvider{
                         putExtra("item_id", itemId)
                         putExtra("updated_name", updatedName)
                     }
+                    SoundManager.playSound("success")
                     setResult(RESULT_OK, resultIntent)
                     finish()
                 },
                 onCancelClicked = {
+                    SoundManager.playSound("tap")
                     setResult(RESULT_CANCELED)
                     finish()
                 }
@@ -196,7 +198,9 @@ class EditItemActivity : ComponentActivity() , TTSContentProvider{
                     }
                     
                     Button(
-                        onClick = { productName = "" },
+                        onClick = {
+                            SoundManager.playSound("delete")
+                            productName = "" },
                         modifier = Modifier
                             .height(40.dp)
                             .width(40.dp),
@@ -220,6 +224,7 @@ class EditItemActivity : ComponentActivity() , TTSContentProvider{
                 // Floating Action Button
                 FloatingActionButton(
                     onClick = {
+                        SoundManager.playSound("tap")
                         if (isRecording) {
                             stopRecording { transcription ->
                                 productName = transcription
@@ -252,7 +257,8 @@ class EditItemActivity : ComponentActivity() , TTSContentProvider{
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Button(
-                        onClick = { onSaveClicked(productName) },
+                        onClick = {SoundManager.playSound("success")
+                            onSaveClicked(productName) },
                         modifier = Modifier
                             .weight(1f)
                             .height(60.dp),

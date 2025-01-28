@@ -142,6 +142,7 @@ fun FilterScreen(
                     isChecked = filter.isActive,
                     onCheckedChange = { isChecked ->
                         onFilterToggled(filter.label, isChecked)
+                        SoundManager.playSound("tap")
                     }
                 )
             }

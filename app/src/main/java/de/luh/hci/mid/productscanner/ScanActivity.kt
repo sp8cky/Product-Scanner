@@ -72,6 +72,8 @@ class ScanActivity : ComponentActivity(), TTSContentProvider {
                 }
             )
         }
+
+        SoundManager.initialize(this)
     }
 
     private fun releaseCamera() {
@@ -160,6 +162,7 @@ fun ScanScreen(
                             }
                         )
                     }
+                    SoundManager.playSound("tap")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -213,6 +216,7 @@ fun CameraPreview(
                                     for (barcode in barcodes) {
                                         barcode.rawValue?.let { value ->
                                             imageProxy.close()
+                                            SoundManager.playSound("success")
                                             onBarcodeScanned(value)
                                             return@addOnSuccessListener
                                         }

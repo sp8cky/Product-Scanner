@@ -52,10 +52,12 @@ class AddItemActivitiy : ComponentActivity(), TTSContentProvider {
                     val resultIntent = Intent().apply {
                         putExtra("item_name", productName)
                     }
+                    SoundManager.playSound("success")
                     setResult(RESULT_OK, resultIntent)
                     finish()
                 },
                 onCancelClicked = {
+                    SoundManager.playSound("tap")
                     setResult(RESULT_CANCELED)
                     finish()
                 }
@@ -214,7 +216,8 @@ class AddItemActivitiy : ComponentActivity(), TTSContentProvider {
                     }
 
                     Button(
-                        onClick = { productName = "" },
+                        onClick = { productName = ""
+                            SoundManager.playSound("delete")},
                         modifier = Modifier
                             .height(40.dp)
                             .width(40.dp),
@@ -237,6 +240,7 @@ class AddItemActivitiy : ComponentActivity(), TTSContentProvider {
 
                 FloatingActionButton(
                     onClick = {
+                        SoundManager.playSound("tap")
                         if (isRecording) {
                             stopRecording { transcription ->
                                 productName = transcription
@@ -273,7 +277,8 @@ class AddItemActivitiy : ComponentActivity(), TTSContentProvider {
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Button(
-                        onClick = { onAddClicked(productName) },
+                        onClick = { SoundManager.playSound("success")
+                            onAddClicked(productName) },
                         modifier = Modifier
                             .weight(1f)
                             .height(60.dp),
