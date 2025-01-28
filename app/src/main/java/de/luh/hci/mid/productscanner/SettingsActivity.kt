@@ -32,7 +32,7 @@ class SettingsActivity : ComponentActivity(), TTSContentProvider {
     }
 
     override fun getTTSContent(): String {
-        return "Du befindest dich in den Einstellungen. Du kannst die TTS-Sprache und Lautstärke ändern und die Datenschutzrichtlinien bzw. dir Infos über die App ansehen."
+        return "Du befindest dich in den Einstellungen. Du kannst die TTS-Sprache und Lautstärke ändern und die Datenschutzrichtlinien und Infos über die App ansehen."
     }
 }
 
@@ -117,7 +117,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                                 ) {
                                     item {
                                         Text(
-                                            "Wir nehmen den Schutz Ihrer Daten ernst. Hier erfahren Sie, wie Ihre Daten in der App verarbeitet werden:\n",
+                                            "Wir nehmen den Schutz Deiner Daten ernst. Hier erfährst Du, wie Deine Daten in der App verarbeitet werden:\n",
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
@@ -141,7 +141,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                                     }
                                     item {
                                         Text(
-                                            "Ihre Daten werden nur für die Bereitstellung der Funktionen genutzt und niemals dauerhaft gespeichert oder ohne Grund an Dritte weitergegeben.",
+                                            "Deine Daten werden nur für die Bereitstellung der Funktionen genutzt und niemals dauerhaft gespeichert oder ohne Grund an Dritte weitergegeben.",
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
