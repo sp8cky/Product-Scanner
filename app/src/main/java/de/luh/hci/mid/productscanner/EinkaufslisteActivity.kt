@@ -64,7 +64,7 @@ class EinkaufslisteActivity : ComponentActivity(), TTSContentProvider {
             "Deine Einkaufsliste ist momentan leer. Über den grünen Plus-Button unten kannst du ein neues Produkt hinzufügen."
         } else {
             "Du befindest dich in der Einkaufsliste. Deine aktuellen Produkte sind: $shoppingListNames. " +
-                    "Über das blaue Lupensymbol kannst du weitere Produktinfos aufrufen, " +
+                    "Über das blaue Stiftsymbol kannst du das Produkt bearbeiten, " +
                     "über das rote Löschsymbol kannst du das Produkt aus der Liste löschen." +
                     " Über den grünen Plus-Button unten kannst du ein neues Produkt hinzufügen."
         }
