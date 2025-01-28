@@ -38,7 +38,7 @@ class ScanActivity : ComponentActivity(), TTSContentProvider {
     private lateinit var cameraProvider: ProcessCameraProvider
 
     override fun getTTSContent(): String {
-        return "Richten Sie die Kamera auf einen Barcode, um ihn automatisch zu scannen. Alternativ können Sie ein Foto aufnehmen, um zusätzliche Informationen aus dem Bild zu extrahieren."
+        return "Richte die Kamera auf einen Barcode, um ihn automatisch zu scannen. Alternativ kannst Du ein Foto aufnehmen, um zusätzliche Informationen aus dem Bild zu extrahieren."
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
