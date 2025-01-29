@@ -5,12 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -93,14 +95,15 @@ fun HomeScreen(navController: NavController) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1.2f), // Nimmt etwas mehr Platz als die anderen Reihen
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            shape = RectangleShape // Rechteckige Form
+                .weight(1.2f)
+                .border(2.dp, Color.Black, shape = RectangleShape), // Schwarze Umrandung
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)), // Blau für primäre Aktion
+            shape = RectangleShape
         ) {
             Text(
                 text = "SCAN",
                 fontSize = 48.sp,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = Color.White,
                 textAlign = TextAlign.Center
             )
         }
@@ -122,14 +125,17 @@ fun HomeScreen(navController: NavController) {
                     SoundManager.playSound("tap")
                     context.startActivity(intent)
                 },
-                modifier = Modifier.fillMaxHeight().weight(1f), // Höhe füllt den verfügbaren Platz
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f)
+                    .border(2.dp, Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
                 shape = RectangleShape
             ) {
                 Text(
                     text = "VERLAUF",
                     fontSize = 22.sp,
-                    color = MaterialTheme.colorScheme.onSecondary,
+                    color = Color.Black, // Weißer Text für maximalen Kontrast
                     textAlign = TextAlign.Center
                 )
             }
@@ -140,14 +146,14 @@ fun HomeScreen(navController: NavController) {
                     SoundManager.playSound("tap")
                     context.startActivity(intent)
                 },
-                modifier = Modifier.fillMaxHeight().weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                modifier = Modifier.fillMaxHeight().weight(1f).border(2.dp, Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
                 shape = RectangleShape
             ) {
                 Text(
                     text = "EINKAUFS\nLISTE",
                     fontSize = 22.sp,
-                    color = MaterialTheme.colorScheme.onSecondary,
+                    color = Color.Black,
                     textAlign = TextAlign.Center
                 )
             }
@@ -169,14 +175,14 @@ fun HomeScreen(navController: NavController) {
                     context.startActivity(intent)
                     SoundManager.playSound("tap")
                 },
-                modifier = Modifier.fillMaxHeight().weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                modifier = Modifier.fillMaxHeight().weight(1f).border(2.dp, Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF228B22)),
                 shape = RectangleShape
             ) {
                 Text(
                     text = "FILTER",
                     fontSize = 22.sp,
-                    color = MaterialTheme.colorScheme.onTertiary,
+                    color = Color.White,
                     textAlign = TextAlign.Center
                 )
             }
@@ -187,14 +193,14 @@ fun HomeScreen(navController: NavController) {
                     context.startActivity(intent)
                     SoundManager.playSound("tap")
                 },
-                modifier = Modifier.fillMaxHeight().weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                modifier = Modifier.fillMaxHeight().weight(1f).border(2.dp, Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF228B22)),
                 shape = RectangleShape
             ) {
                 Text(
                     text = "EINSTELLUNGEN",
                     fontSize = 22.sp,
-                    color = MaterialTheme.colorScheme.onTertiary,
+                    color = Color.White,
                     textAlign = TextAlign.Center
                 )
             }

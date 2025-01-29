@@ -170,8 +170,10 @@ fun SettingItem(label: String, isChecked: Boolean, onCheckedChange: (Boolean) ->
             checked = isChecked,
             onCheckedChange = { onCheckedChange(it) },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Blue40,
-                uncheckedThumbColor = Color.Gray
+                checkedTrackColor = Color(0xFF00A650),  // Sattes Grün für "An"-Zustand
+                checkedThumbColor = Color.Black,        // Schwarzer Thumb auf hellem Hintergrund
+                uncheckedTrackColor = Color(0xFFB0B0B0), // Grauer Hintergrund für "Aus"-Zustand
+                uncheckedThumbColor = Color(0xFF606060)  // Dunkelgrauer Thumb für "Aus"-Zustand
             )
         )
     }

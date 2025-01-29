@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -168,7 +169,7 @@ fun ScanScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .height(60.dp), // Feste Höhe für den Button
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF005BBB)),
                 shape = MaterialTheme.shapes.medium
             ) {
                 Text(

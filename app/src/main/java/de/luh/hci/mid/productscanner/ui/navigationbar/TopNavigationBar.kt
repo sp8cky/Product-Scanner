@@ -21,7 +21,7 @@ fun TopNavigationBar(title: String) {
         title = {
             Text(
                 text = title,
-                color = MaterialTheme.colorScheme.primary,
+                color = Color.Black,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,

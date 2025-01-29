@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
@@ -273,7 +274,7 @@ fun DropdownMenuButton(
     Box {
         Button(
             onClick = { expanded.value = true
-                SoundManager.playSound("tap")},
+                SoundManager.playSound("tap") },
             colors = ButtonDefaults.buttonColors(containerColor = Blue40),
             shape = RectangleShape
         ) {
@@ -281,7 +282,8 @@ fun DropdownMenuButton(
         }
         DropdownMenu(
             expanded = expanded.value,
-            onDismissRequest = { expanded.value = false }
+            onDismissRequest = { expanded.value = false },
+            modifier = Modifier.background(Color(0xFFF0F0F0)) // Hellgrauer Hintergrund
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
@@ -290,9 +292,11 @@ fun DropdownMenuButton(
                         expanded.value = false
                         SoundManager.playSound("tap")
                     },
-                    text = { Text(option, fontSize = 16.sp, color = Blue40) }
+                    text = { Text(option, fontSize = 16.sp, color = Color(0xFF004080)) }, // Dunkelblau
+                    modifier = Modifier.background(Color(0xFFF0F0F0)) // Hellgrauer Hintergrund
                 )
             }
         }
     }
 }
+
