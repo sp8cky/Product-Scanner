@@ -38,15 +38,10 @@ class ImageInfoActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val imagePath = intent.getStringExtra("IMAGE_PATH")
-
         setContent {
             var productName by remember { mutableStateOf("Lade...") }
-            var brand by remember { mutableStateOf("Lade...") }
-            var ingredients by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf(imagePath ?: "") }
-            var filters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
             var isLoading by remember { mutableStateOf(true) }
-            var isExpanded by remember { mutableStateOf(false) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
             val scope = rememberCoroutineScope()
 
@@ -54,15 +49,12 @@ class ImageInfoActivity : ComponentActivity() {
                 imagePath?.let {
                     scope.launch(Dispatchers.IO) {
                         try {
-                            Log.d("ImageInfoActivity", "Starting fetchProductDetailsFromImage")
+                            Log.d("ImageInfoActivity1", "Starting fetchProductDetailsFromImage")
                             val productData = fetchProductDetailsFromImage(it)
-                            Log.d("ImageInfoActivity", "Product data fetched: $productData")
+                            Log.d("ImageInfoActivity1", "Product data fetched: $productData")
                             productName = productData["name"] as? String ?: "Unbekannt"
-                            brand = productData["brand"] as? String ?: "Unbekannt"
-                            ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
-                            filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
                         } catch (e: Exception) {
-                            Log.e("ImageInfoActivity", "Error fetching product data", e)
+                            Log.e("ImageInfoActivity1", "Error fetching product data", e)
                             errorMessage = "Fehler beim Abrufen der Daten"
                         } finally {
                             isLoading = false
@@ -76,14 +68,9 @@ class ImageInfoActivity : ComponentActivity() {
 
             ImageProductDetailsScreen(
                 productName = productName,
-                brand = brand,
-                ingredients = ingredients,
                 productImageUrl = productImageUrl,
-                filters = filters,
                 isLoading = isLoading,
-                errorMessage = errorMessage,
-                isExpanded = isExpanded,
-                onExpandToggle = { isExpanded = !isExpanded }
+                errorMessage = errorMessage
             )
         }
     }
@@ -91,23 +78,27 @@ class ImageInfoActivity : ComponentActivity() {
     private suspend fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
         val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Schlüssel sicher aus BuildConfig
         val url = "https://api.openai.com/v1/chat/completions"
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)  // Verbindungstimeout
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)     // Lese-Timeout
+            .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)    // Schreib-Timeout
+            .build()
 
         try {
             val file = File(imagePath)
 
             // Überprüfen, ob die Datei existiert
             if (!file.exists()) {
-                Log.e("ImageInfoActivity", "Image file does not exist: $imagePath")
-                return mapOf("error" to "Fehler: Bild nicht gefunden")
+                Log.e("ImageInfoActivity1", "Image file does not exist: $imagePath")
+                return mapOf("error" to "ImageInfoActivity1: Bild nicht gefunden")
             }
 
-            Log.d("ImageInfoActivity", "Encoding image to Base64")
+            Log.d("ImageInfoActivity1", "Encoding image to Base64")
             val base64Image = file.inputStream().use {
                 android.util.Base64.encodeToString(it.readBytes(), android.util.Base64.DEFAULT)
             }
 
-            Log.d("ImageInfoActivity", "Creating JSON request")
+            Log.d("ImageInfoActivity1", "Creating JSON request")
             val jsonRequest = JSONObject().apply {
                 put("model", "gpt-4o-mini")
                 put("messages", JSONArray().apply {
@@ -136,7 +127,7 @@ class ImageInfoActivity : ComponentActivity() {
                 })
             }
 
-            Log.d("ImageInfoActivity", "JSON request created: $jsonRequest")
+            Log.d("ImageInfoActivity1", "JSON request created: $jsonRequest")
 
             val requestBody = jsonRequest.toString().toRequestBody("application/json".toMediaType())
 
@@ -147,61 +138,39 @@ class ImageInfoActivity : ComponentActivity() {
                 .addHeader("Content-Type", "application/json")
                 .build()
 
-            Log.d("ImageInfoActivity", "Sending request to OpenAI API")
+            Log.d("ImageInfoActivity1", "Sending request to OpenAI API")
             val response = client.newCall(request).execute()
 
-            Log.d("ImageInfoActivity", "Response received: Code ${response.code}")
+            Log.d("ImageInfoActivity1", "Response received: Code ${response.code}")
 
             if (response.isSuccessful) {
                 val responseBody = response.body?.string()
                 if (!responseBody.isNullOrEmpty()) {
-                    Log.d("ImageInfoActivity", "Response body: $responseBody")
-                    val jsonResponse = JSONObject(responseBody)
-
-                    val productName = jsonResponse.optString("name", "Unbekannt")
-                    val brand = jsonResponse.optString("brand", "Unbekannt")
-                    val ingredients = jsonResponse.optString("ingredients", "Keine Angaben")
-                    val filters = mutableMapOf<String, Boolean>()
-
-                    jsonResponse.optJSONObject("filters")?.let { filterObj ->
-                        filters["Vegetarisch"] = filterObj.optBoolean("vegetarian", false)
-                        filters["Vegan"] = filterObj.optBoolean("vegan", false)
-                        filters["Nussfrei"] = filterObj.optBoolean("nut_free", false)
-                        filters["Laktosefrei"] = filterObj.optBoolean("lactose_free", false)
-                    }
-
-                    return mapOf(
-                        "name" to productName,
-                        "brand" to brand,
-                        "ingredients" to ingredients,
-                        "filters" to filters
-                    )
+                    Log.d("ImageInfoActivity1", "Response body: $responseBody")
+                    mapOf("response" to "$responseBody")
                 } else {
-                    Log.e("ImageInfoActivity", "Empty response body")
+                    Log.e("ImageInfoActivity1", "Empty response body")
                     return mapOf("error" to "Leere Antwort vom Server erhalten.")
                 }
             } else {
-                Log.e("ImageInfoActivity", "Error response: ${response.code} - ${response.message}")
+                Log.e("ImageInfoActivity1", "Error response: ${response.code} - ${response.message}")
                 return mapOf("error" to "Fehler: ${response.code} - ${response.message}")
             }
         } catch (e: Exception) {
-            Log.e("ImageInfoActivity", "Exception during API call: ${e.message}", e)
+            Log.e("ImageInfoActivity1", "Exception during API call: ${e.message}", e)
             return mapOf("error" to "Fehler beim Senden des Bildes: ${e.message}")
         }
+        return mapOf("error" to "Fehler return neu")
     }
 }
+
 
 @Composable
 fun ImageProductDetailsScreen(
     productName: String,
-    brand: String,
-    ingredients: String,
     productImageUrl: String,
-    filters: Map<String, Boolean>,
     isLoading: Boolean,
     errorMessage: String?,
-    isExpanded: Boolean,
-    onExpandToggle: () -> Unit
 ) {
     if (isLoading) {
         Box(
@@ -252,55 +221,6 @@ fun ImageProductDetailsScreen(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = "Marke: $brand",
-                    fontSize = 18.sp
-                )
-            }
-
-            // Zutaten
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onExpandToggle() }
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = if (isExpanded) "Zutaten: $ingredients"
-                        else "Zutaten: ${ingredients.take(50)}" +
-                                if (!isExpanded && ingredients.length > 50) "..." else "",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Einklappen" else "Aufklappen"
-                    )
-                }
-            }
-
-            // Filter
-            filters.forEach { (label, isActive) ->
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = label,
-                            fontSize = 18.sp
-                        )
-                        Checkbox(
-                            checked = isActive,
-                            onCheckedChange = null,
-                            enabled = false
-                        )
-                    }
-                }
             }
         }
     }
