@@ -5,18 +5,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -24,12 +19,11 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 
@@ -52,7 +46,7 @@ class ImageInfoActivity : ComponentActivity() {
                             Log.d("ImageInfoActivity1", "Starting fetchProductDetailsFromImage")
                             val productData = fetchProductDetailsFromImage(it)
                             Log.d("ImageInfoActivity1", "Product data fetched: $productData")
-                            productName = productData["name"] as? String ?: "Unbekannt"
+                            productName = productData["response"] as? String ?: "Unbekannt"
                         } catch (e: Exception) {
                             Log.e("ImageInfoActivity1", "Error fetching product data", e)
                             errorMessage = "Fehler beim Abrufen der Daten"
@@ -146,13 +140,33 @@ class ImageInfoActivity : ComponentActivity() {
             if (response.isSuccessful) {
                 val responseBody = response.body?.string()
                 if (!responseBody.isNullOrEmpty()) {
-                    Log.d("ImageInfoActivity1", "Response body: $responseBody")
-                    mapOf("response" to "$responseBody")
+                    try {
+                        // JSON in JSONObject umwandeln
+                        val jsonObject = JSONObject(responseBody)
+
+                        // Die "choices" Liste extrahieren
+                        val choices = jsonObject.getJSONArray("choices")
+
+                        // Die erste Wahl (choice) extrahieren
+                        val firstChoice = choices.getJSONObject(0)
+
+                        // Den Inhalt der Nachricht extrahieren
+                        val messageString = firstChoice.getJSONObject("message").getString("content")
+
+                        // Loggen oder weiterverwenden
+                        Log.d("ImageInfoActivity1", "Message content: $messageString")
+
+                        return mapOf("response" to messageString)
+                    } catch (e: JSONException) {
+                        Log.e("ImageInfoActivity1", "Fehler beim Parsen des JSON: ${e.message}")
+                        return mapOf("error" to "Fehler beim Verarbeiten der Antwort.")
+                    }
                 } else {
-                    Log.e("ImageInfoActivity1", "Empty response body")
+                    Log.e("ImageInfoActivity1", "Leere Antwort vom Server erhalten.")
                     return mapOf("error" to "Leere Antwort vom Server erhalten.")
                 }
-            } else {
+
+        } else {
                 Log.e("ImageInfoActivity1", "Error response: ${response.code} - ${response.message}")
                 return mapOf("error" to "Fehler: ${response.code} - ${response.message}")
             }
@@ -160,7 +174,6 @@ class ImageInfoActivity : ComponentActivity() {
             Log.e("ImageInfoActivity1", "Exception during API call: ${e.message}", e)
             return mapOf("error" to "Fehler beim Senden des Bildes: ${e.message}")
         }
-        return mapOf("error" to "Fehler return neu")
     }
 }
 
@@ -217,9 +230,8 @@ fun ImageProductDetailsScreen(
             // Produktdetails
             item {
                 Text(
-                    text = "Name: $productName",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    text = productName,
+                    fontSize = 16.sp
                 )
             }
         }
