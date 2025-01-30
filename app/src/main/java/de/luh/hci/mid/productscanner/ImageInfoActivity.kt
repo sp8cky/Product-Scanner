@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -32,16 +33,17 @@ import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import kotlinx.coroutines.runBlocking
 
 class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
+    private var productName: String = "Lade..."
 
     override fun getTTSContent(): String {
-        return "imageinfoactivity"
+        return productName
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val imagePath = intent.getStringExtra("IMAGE_PATH")
         setContent {
-            var productName by remember { mutableStateOf("Lade...") }
+            var productNameState by remember { mutableStateOf("Lade...") }
             var productImageUrl by remember { mutableStateOf(imagePath ?: "") }
             var isLoading by remember { mutableStateOf(true) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -54,7 +56,8 @@ class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
                             Log.d("ImageInfoActivity1", "Starting fetchProductDetailsFromImage")
                             val productData = fetchProductDetailsFromImage(it)
                             Log.d("ImageInfoActivity1", "Product data fetched: $productData")
-                            productName = productData["response"] as? String ?: "Unbekannt"
+                            productNameState = productData["response"] as? String ?: "Unbekannt"
+                            productName = productNameState // Set the instance variable
                         } catch (e: Exception) {
                             Log.e("ImageInfoActivity1", "Error fetching product data", e)
                             errorMessage = "Fehler beim Abrufen der Daten"
@@ -69,7 +72,7 @@ class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
             }
 
             ImageProductDetailsScreen(
-                productName = productName,
+                productNameState = productName,
                 productImageUrl = productImageUrl,
                 isLoading = isLoading,
                 errorMessage = errorMessage
@@ -188,7 +191,7 @@ class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
 
 @Composable
 fun ImageProductDetailsScreen(
-    productName: String,
+    productNameState: String,
     productImageUrl: String,
     isLoading: Boolean,
     errorMessage: String?,
@@ -202,7 +205,18 @@ fun ImageProductDetailsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp)) // Abstand zwischen Kreis und Text
+                    Text(
+                        text = "Bitte Warten\nDieser Prozess kann ein wenig dauern",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         } else if (!errorMessage.isNullOrEmpty()) {
             Box(
@@ -243,7 +257,7 @@ fun ImageProductDetailsScreen(
                 // Produktdetails
                 item {
                     Text(
-                        text = productName,
+                        text = productNameState,
                         fontSize = 16.sp
                     )
                 }
