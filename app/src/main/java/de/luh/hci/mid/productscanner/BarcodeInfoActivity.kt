@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
@@ -38,25 +39,71 @@ import de.luh.hci.mid.productscanner.ui.theme.Green60
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 import de.luh.hci.mid.productscanner.ui.theme.Red40
 
+
 class BarcodeInfoActivity : ComponentActivity(), TTSContentProvider {
     private var productName by mutableStateOf("Lade...")
     private var brand by mutableStateOf("Lade...")
     private var ingredients by mutableStateOf("Lade...")
     private var productFilters by mutableStateOf<Map<String, Boolean?>>(emptyMap())
+    private var ttsfilterstring = ""
+
+    fun updateActiveFilters() {
+        val filterRepository = FilterRepository(this)
+
+        lifecycleScope.launch {
+            val filters = filterRepository.getFilters()
+            Log.d("BarcodeInfoActivityFilter", "Fetched Filters: $filters") // Log filters
+
+            // Nur Labels mit isActive == true beibehalten
+            val activeLabels = filters.filter { it.isActive }.map { it.label }.toSet()
+
+            // Filter productFilters, sodass nur Labels aus activeLabels übrig bleiben
+            val filteredProductFilters = productFilters.filterKeys { it in activeLabels }
+
+            val nullFilters = filteredProductFilters.filterValues { it == null }.keys
+            Log.d("BarcodeInfoActivityFilter", "Filter mit Status null: $nullFilters")
+
+            val trueFilters = filteredProductFilters.filterValues { it == true }.keys
+            Log.d("BarcodeInfoActivityFilter", "Filter mit Status true: $trueFilters")
+
+            val falseFilters = filteredProductFilters.filterValues { it == false }.keys
+            Log.d("BarcodeInfoActivityFilter", "Filter mit Status false: $falseFilters")
+
+            val nullFiltertext = if (nullFilters.isEmpty()) {
+                ""
+            } else {
+                "Für folgende Filter gibt es keine Angaben: $nullFilters."
+            }
+            val trueFilterstext = if (trueFilters.isEmpty()) {
+                ""
+            } else {
+                "Das Produkt ist: $trueFilters."
+            }
+            val falseFiltertext = if (falseFilters.isEmpty()) {
+                ""
+            } else {
+                "Achtung! Das Produkt ist nicht: $falseFilters."
+            }
+
+            ttsfilterstring = trueFilterstext + nullFiltertext + falseFiltertext
+            Log.d("BarcodeInfoActivityFilter", "Filtertext: $ttsfilterstring")
+        }
+    }
 
     override fun getTTSContent(): String {
-        val filterDescriptions = productFilters.entries
-            .filter { it.value == true }
-            .joinToString { it.key }
+        updateActiveFilters() // This is still asynchronous!
 
+        val filterDescriptions = productFilters
         val filterText = if (filterDescriptions.isEmpty()) {
-            "keine aktiven Filter."
+            "Es sind keine Filter aktiv."
         } else {
-            "die Filter $filterDescriptions."
+            ttsfilterstring
         }
 
-        return "Du hast folgendes Produkt gescannt: $productName von $brand. Das Produkt erfüllt $filterText . Die Zutaten sind $ingredients."
+        return "Du hast folgendes Produkt gescannt: $productName von $brand. $filterText. Die Zutaten sind $ingredients."
     }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val barcodeValue = intent.getStringExtra("BARCODE_VALUE")
