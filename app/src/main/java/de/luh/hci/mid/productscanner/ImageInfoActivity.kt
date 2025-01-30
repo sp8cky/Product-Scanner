@@ -30,7 +30,6 @@ import java.io.File
 import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
 import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
 import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
-import kotlinx.coroutines.runBlocking
 
 class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
     private var productName: String = "Lade..."
@@ -44,7 +43,7 @@ class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
         val imagePath = intent.getStringExtra("IMAGE_PATH")
         setContent {
             var productNameState by remember { mutableStateOf("Lade...") }
-            var productImageUrl by remember { mutableStateOf(imagePath ?: "") }
+            val productImageUrl by remember { mutableStateOf(imagePath ?: "") }
             var isLoading by remember { mutableStateOf(true) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
             val scope = rememberCoroutineScope()
@@ -80,7 +79,7 @@ class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
         }
     }
 
-    private suspend fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
+    private fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
         val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Schlüssel sicher aus BuildConfig
         val url = "https://api.openai.com/v1/chat/completions"
         val client = OkHttpClient.Builder()
@@ -115,7 +114,7 @@ class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
                                 JSONArray().apply {
                                     put(
                                         JSONObject().apply {
-                                            put("type", "text");
+                                            put("type", "text")
                                             put("text", "Zeige mir das Produkt mit Name, Marke und Zutaten an. Ignoriere Dinge im Hintergrund. Falls Dinge nicht angegeben sind, versuche sie zu vervollständigen durch Recherche.") })
                                     put(
                                         JSONObject().apply {
