@@ -26,8 +26,16 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
+import kotlinx.coroutines.runBlocking
 
-class ImageInfoActivity : ComponentActivity() {
+class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
+
+    override fun getTTSContent(): String {
+        return "imageinfoactivity"
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -185,54 +193,60 @@ fun ImageProductDetailsScreen(
     isLoading: Boolean,
     errorMessage: String?,
 ) {
-    if (isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    } else if (!errorMessage.isNullOrEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Produktbild
-            item {
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(LocalContext.current)
-                            .data(File(productImageUrl).takeIf { File(productImageUrl).exists() }
-                                ?: productImageUrl)
-                            .apply { crossfade(true) }
-                            .build()
-                    ),
-                    contentDescription = "Produktbild",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
+    Scaffold(
+        topBar = { TopNavigationBar(title = "Produktdetails") },
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
+    ){paddingValues ->
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (!errorMessage.isNullOrEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Produktbild
+                item {
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(LocalContext.current)
+                                .data(File(productImageUrl).takeIf { File(productImageUrl).exists() }
+                                    ?: productImageUrl)
+                                .apply { crossfade(true) }
+                                .build()
+                        ),
+                        contentDescription = "Produktbild",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
 
-            // Produktdetails
-            item {
-                Text(
-                    text = productName,
-                    fontSize = 16.sp
-                )
+                // Produktdetails
+                item {
+                    Text(
+                        text = productName,
+                        fontSize = 16.sp
+                    )
+                }
             }
         }
     }
