@@ -5,18 +5,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -24,29 +20,31 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
+import de.luh.hci.mid.productscanner.ui.navigationbar.BottomNavigationBar
+import de.luh.hci.mid.productscanner.ui.navigationbar.TTSContentProvider
+import de.luh.hci.mid.productscanner.ui.navigationbar.TopNavigationBar
 
-class ImageInfoActivity : ComponentActivity() {
+class ImageInfoActivity : ComponentActivity() , TTSContentProvider{
+    private var productName: String = "Lade..."
+
+    override fun getTTSContent(): String {
+        return productName
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val imagePath = intent.getStringExtra("IMAGE_PATH")
-
         setContent {
-            var productName by remember { mutableStateOf("Lade...") }
-            var brand by remember { mutableStateOf("Lade...") }
-            var ingredients by remember { mutableStateOf("Lade...") }
-            var productImageUrl by remember { mutableStateOf(imagePath ?: "") }
-            var filters by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+            var productNameState by remember { mutableStateOf("Lade...") }
+            val productImageUrl by remember { mutableStateOf(imagePath ?: "") }
             var isLoading by remember { mutableStateOf(true) }
-            var isExpanded by remember { mutableStateOf(false) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
             val scope = rememberCoroutineScope()
 
@@ -54,15 +52,13 @@ class ImageInfoActivity : ComponentActivity() {
                 imagePath?.let {
                     scope.launch(Dispatchers.IO) {
                         try {
-                            Log.d("ImageInfoActivity", "Starting fetchProductDetailsFromImage")
+                            Log.d("ImageInfoActivity1", "Starting fetchProductDetailsFromImage")
                             val productData = fetchProductDetailsFromImage(it)
-                            Log.d("ImageInfoActivity", "Product data fetched: $productData")
-                            productName = productData["name"] as? String ?: "Unbekannt"
-                            brand = productData["brand"] as? String ?: "Unbekannt"
-                            ingredients = productData["ingredients"] as? String ?: "Keine Angaben"
-                            filters = productData["filters"] as? Map<String, Boolean> ?: emptyMap()
+                            Log.d("ImageInfoActivity1", "Product data fetched: $productData")
+                            productNameState = productData["response"] as? String ?: "Unbekannt"
+                            productName = productNameState // Set the instance variable
                         } catch (e: Exception) {
-                            Log.e("ImageInfoActivity", "Error fetching product data", e)
+                            Log.e("ImageInfoActivity1", "Error fetching product data", e)
                             errorMessage = "Fehler beim Abrufen der Daten"
                         } finally {
                             isLoading = false
@@ -75,39 +71,38 @@ class ImageInfoActivity : ComponentActivity() {
             }
 
             ImageProductDetailsScreen(
-                productName = productName,
-                brand = brand,
-                ingredients = ingredients,
+                productNameState = productName,
                 productImageUrl = productImageUrl,
-                filters = filters,
                 isLoading = isLoading,
-                errorMessage = errorMessage,
-                isExpanded = isExpanded,
-                onExpandToggle = { isExpanded = !isExpanded }
+                errorMessage = errorMessage
             )
         }
     }
 
-    private suspend fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
+    private fun fetchProductDetailsFromImage(imagePath: String): Map<String, Any> {
         val apiKey = BuildConfig.OPENAI_API_KEY // Lade den API-Schlüssel sicher aus BuildConfig
         val url = "https://api.openai.com/v1/chat/completions"
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)  // Verbindungstimeout
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)     // Lese-Timeout
+            .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)    // Schreib-Timeout
+            .build()
 
         try {
             val file = File(imagePath)
 
             // Überprüfen, ob die Datei existiert
             if (!file.exists()) {
-                Log.e("ImageInfoActivity", "Image file does not exist: $imagePath")
-                return mapOf("error" to "Fehler: Bild nicht gefunden")
+                Log.e("ImageInfoActivity1", "Image file does not exist: $imagePath")
+                return mapOf("error" to "ImageInfoActivity1: Bild nicht gefunden")
             }
 
-            Log.d("ImageInfoActivity", "Encoding image to Base64")
+            Log.d("ImageInfoActivity1", "Encoding image to Base64")
             val base64Image = file.inputStream().use {
                 android.util.Base64.encodeToString(it.readBytes(), android.util.Base64.DEFAULT)
             }
 
-            Log.d("ImageInfoActivity", "Creating JSON request")
+            Log.d("ImageInfoActivity1", "Creating JSON request")
             val jsonRequest = JSONObject().apply {
                 put("model", "gpt-4o-mini")
                 put("messages", JSONArray().apply {
@@ -119,7 +114,7 @@ class ImageInfoActivity : ComponentActivity() {
                                 JSONArray().apply {
                                     put(
                                         JSONObject().apply {
-                                            put("type", "text");
+                                            put("type", "text")
                                             put("text", "Zeige mir das Produkt mit Name, Marke und Zutaten an. Ignoriere Dinge im Hintergrund. Falls Dinge nicht angegeben sind, versuche sie zu vervollständigen durch Recherche.") })
                                     put(
                                         JSONObject().apply {
@@ -136,7 +131,7 @@ class ImageInfoActivity : ComponentActivity() {
                 })
             }
 
-            Log.d("ImageInfoActivity", "JSON request created: $jsonRequest")
+            Log.d("ImageInfoActivity1", "JSON request created: $jsonRequest")
 
             val requestBody = jsonRequest.toString().toRequestBody("application/json".toMediaType())
 
@@ -147,159 +142,123 @@ class ImageInfoActivity : ComponentActivity() {
                 .addHeader("Content-Type", "application/json")
                 .build()
 
-            Log.d("ImageInfoActivity", "Sending request to OpenAI API")
+            Log.d("ImageInfoActivity1", "Sending request to OpenAI API")
             val response = client.newCall(request).execute()
 
-            Log.d("ImageInfoActivity", "Response received: Code ${response.code}")
+            Log.d("ImageInfoActivity1", "Response received: Code ${response.code}")
 
             if (response.isSuccessful) {
                 val responseBody = response.body?.string()
                 if (!responseBody.isNullOrEmpty()) {
-                    Log.d("ImageInfoActivity", "Response body: $responseBody")
-                    val jsonResponse = JSONObject(responseBody)
+                    try {
+                        // JSON in JSONObject umwandeln
+                        val jsonObject = JSONObject(responseBody)
 
-                    val productName = jsonResponse.optString("name", "Unbekannt")
-                    val brand = jsonResponse.optString("brand", "Unbekannt")
-                    val ingredients = jsonResponse.optString("ingredients", "Keine Angaben")
-                    val filters = mutableMapOf<String, Boolean>()
+                        // Die "choices" Liste extrahieren
+                        val choices = jsonObject.getJSONArray("choices")
 
-                    jsonResponse.optJSONObject("filters")?.let { filterObj ->
-                        filters["Vegetarisch"] = filterObj.optBoolean("vegetarian", false)
-                        filters["Vegan"] = filterObj.optBoolean("vegan", false)
-                        filters["Nussfrei"] = filterObj.optBoolean("nut_free", false)
-                        filters["Laktosefrei"] = filterObj.optBoolean("lactose_free", false)
+                        // Die erste Wahl (choice) extrahieren
+                        val firstChoice = choices.getJSONObject(0)
+
+                        // Den Inhalt der Nachricht extrahieren
+                        val messageString = firstChoice.getJSONObject("message").getString("content")
+
+                        // Loggen oder weiterverwenden
+                        Log.d("ImageInfoActivity1", "Message content: $messageString")
+
+                        return mapOf("response" to messageString)
+                    } catch (e: JSONException) {
+                        Log.e("ImageInfoActivity1", "Fehler beim Parsen des JSON: ${e.message}")
+                        return mapOf("error" to "Fehler beim Verarbeiten der Antwort.")
                     }
-
-                    return mapOf(
-                        "name" to productName,
-                        "brand" to brand,
-                        "ingredients" to ingredients,
-                        "filters" to filters
-                    )
                 } else {
-                    Log.e("ImageInfoActivity", "Empty response body")
+                    Log.e("ImageInfoActivity1", "Leere Antwort vom Server erhalten.")
                     return mapOf("error" to "Leere Antwort vom Server erhalten.")
                 }
-            } else {
-                Log.e("ImageInfoActivity", "Error response: ${response.code} - ${response.message}")
+
+        } else {
+                Log.e("ImageInfoActivity1", "Error response: ${response.code} - ${response.message}")
                 return mapOf("error" to "Fehler: ${response.code} - ${response.message}")
             }
         } catch (e: Exception) {
-            Log.e("ImageInfoActivity", "Exception during API call: ${e.message}", e)
+            Log.e("ImageInfoActivity1", "Exception during API call: ${e.message}", e)
             return mapOf("error" to "Fehler beim Senden des Bildes: ${e.message}")
         }
     }
 }
 
+
 @Composable
 fun ImageProductDetailsScreen(
-    productName: String,
-    brand: String,
-    ingredients: String,
+    productNameState: String,
     productImageUrl: String,
-    filters: Map<String, Boolean>,
     isLoading: Boolean,
     errorMessage: String?,
-    isExpanded: Boolean,
-    onExpandToggle: () -> Unit
 ) {
-    if (isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    } else if (!errorMessage.isNullOrEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Produktbild
-            item {
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(LocalContext.current)
-                            .data(File(productImageUrl).takeIf { File(productImageUrl).exists() }
-                                ?: productImageUrl)
-                            .apply { crossfade(true) }
-                            .build()
-                    ),
-                    contentDescription = "Produktbild",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-            }
-
-            // Produktdetails
-            item {
-                Text(
-                    text = "Name: $productName",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Marke: $brand",
-                    fontSize = 18.sp
-                )
-            }
-
-            // Zutaten
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onExpandToggle() }
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+    Scaffold(
+        topBar = { TopNavigationBar(title = "Produktdetails") },
+        bottomBar = { BottomNavigationBar(navController = null, ttsContentProvider = LocalContext.current as TTSContentProvider) }
+    ){paddingValues ->
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp)) // Abstand zwischen Kreis und Text
                     Text(
-                        text = if (isExpanded) "Zutaten: $ingredients"
-                        else "Zutaten: ${ingredients.take(50)}" +
-                                if (!isExpanded && ingredients.length > 50) "..." else "",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Einklappen" else "Aufklappen"
+                        text = "Bitte Warten\nDieser Prozess kann ein wenig dauern",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
-
-            // Filter
-            filters.forEach { (label, isActive) ->
+        } else if (!errorMessage.isNullOrEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Produktbild
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = label,
-                            fontSize = 18.sp
-                        )
-                        Checkbox(
-                            checked = isActive,
-                            onCheckedChange = null,
-                            enabled = false
-                        )
-                    }
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(LocalContext.current)
+                                .data(File(productImageUrl).takeIf { File(productImageUrl).exists() }
+                                    ?: productImageUrl)
+                                .apply { crossfade(true) }
+                                .build()
+                        ),
+                        contentDescription = "Produktbild",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+
+                // Produktdetails
+                item {
+                    Text(
+                        text = productNameState,
+                        fontSize = 16.sp
+                    )
                 }
             }
         }
